@@ -32,8 +32,12 @@ def return_max_ensemble(timestep):
     h5 = h5py.File(get_summary_file(timestep),'r')
     a0 = h5['max_amplitude'][:]
     h5.close()
-
-    return np.argwhere(np.abs(a0) == np.abs(a0).max())[0,0]
+    
+    print(a0.max(), a0.min())
+    if a0.max() > np.abs(a0.min()):
+        return np.argwhere(a0 == a0.max())[0,0]
+    else:
+        return np.argwhere(a0 == a0.min())[0,0]
 
 def double_tanh(beta, z):
     
@@ -44,11 +48,14 @@ def fullsine(x, a_0, L_w, x0=0.):
     
     k = 2*np.pi/L_w
     eta =  - a_0 * np.cos(k*x + k*x0 + np.pi/2)
-    eta[x>x0+3*L_w/2] = 0.
-    #eta[x<x0-4*L_w/2] = 0.
-    eta[x<x0-L_w/2] = 0.
+    #eta[x>x0+3*L_w/2] = 0.
+    ##eta[x<x0-4*L_w/2] = 0.
+    #eta[x<x0-L_w/2] = 0.
 
     return eta
+
+def zeroic(x,a0,Lw,x0=0):
+    return 0.*x
 
 def doublesine(x, a_0, L_w, x0=0.):
 
@@ -74,10 +81,13 @@ def run_kdv(timestep, ensemble, runtime):
         dt=20.,\
         nu_H=0.0,\
         ekdv=False,\
-        wavefunc=doublesine,\
-        L_d = 320000,
-        Nx = 12800,
+        wavefunc=zeroic,\
+        #L_d = 320000,
+        #L_d = 120000,
+        #Nx = 12800,
         alpha_10=0.0,\
+        nonhydrostatic=True,
+        nonlinear=True,
         )
 
     ntout = 120.
@@ -100,8 +110,8 @@ def run_kdv(timestep, ensemble, runtime):
     rhoz= double_tanh(beta,Z)
 
 
-    plt.plot(rhoz, Z)
-    plt.show()
+    #plt.plot(rhoz, Z)
+    #plt.show()
 
     ## Use the wrapper class to compute density on a constant grid
     #iw = IWaveModes(T, z, salt=salt, density_class=FitDensity, density_func=density_func)
@@ -121,6 +131,9 @@ def run_kdv(timestep, ensemble, runtime):
     kdvargs['Lw'] = Lw
     kdvargs['a0'] = a0
 
+    def sinebc(t):
+        return a0*np.sin(omega*t)
+
     ### Test initialising the kdv class
     #mykdv0 = kdv.KdVImEx(iw.rhoZ, iw.Z, **kdvargs)
     #mykdv0.print_params()
@@ -129,21 +142,25 @@ def run_kdv(timestep, ensemble, runtime):
 
     ## Call the KdV run function
     mykdv, Bda = solve_kdv(rhoz, Z, runtime,\
+            solver='imex',
+            x = np.arange(0,1.7e5+50,50.),
+            bcfunc=sinebc,
             ntout=ntout, outfile=outfile, **kdvargs)
 
     return outfile
 
 ##############
 
-timesteps = [13,300]
-runtime = 1.5*86400.
+timesteps = [270, 13]
+runtime = 2.5*86400.
+#runtime = 20*500.
 
 for tt in timesteps:
     ee = return_max_ensemble(tt)
     outfile = run_kdv(tt, ee, runtime)
 
     # Call the viewer class directly
-    V = viewer(outfile, tstep=-2, ulim=0.5, xaxis='distance')
+    V = viewer(outfile, tstep=-2, ulim=0.5, xaxis='distance',ylim=[-100,100])
     V.ax1.set_xlim(-30,0)
     V.ax2.set_xlim(-30,0)
     #
