@@ -199,6 +199,10 @@ def run_solver(a0_sample, beta_sample):
     output_u_surface = output[:,1]
     output_u_seabed = output[:,2]
 
+    #if rank == 0:
+    #    plt.figure()
+    #    plt.plot(output_u_seabed)
+    #    plt.show()
 
     max_output_amplitude = maximum_amplitude_finder(output_amplitude)
     max_output_u_surface = maximum_amplitude_finder(output_u_surface)
@@ -232,7 +236,8 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     max_u_seabed_all = []
     for sample in range(num_samples):
         if rank==0:
-            print("Processing timepoint {}, sample {}".format(timepoint, sample))
+            print("Processing timepoint {}, sample {}, a0 {}".\
+                format(timepoint, sample, a0_samples[sample]))
         a0_sample = a0_samples[sample]
         beta_sample = beta_samples[:, sample]
         tic = time()
