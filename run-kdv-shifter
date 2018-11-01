@@ -1,0 +1,28 @@
+#!/bin/bash --login
+#
+#SBATCH --account=pawsey0106
+#SBATCH --time=24:00:00
+##SBATCH --time=00:10:00
+#SBATCH --partition=workq
+##SBATCH --partition=debugq
+#SBATCH --output=LOGS/kdvshifter-%j.out
+#SBATCH --nodes=6
+#SBATCH --ntasks=144
+#SBATCH --cpus-per-task=1
+##SBATCH --mem=64000
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=matt.rayson@uwa.edu.au
+
+module load shifter
+
+export SOLITON_HOME=$MYSCRATCH/KDV
+export CODE_DIR=$MYGROUP/KDV
+
+srun -u --export=all \
+    shifter run --mpi mrayson/iwaves \
+    python -u scripts/run_pde_solver_mpi.py \
+        --beta_infile $CODE_DIR/inputs/2018-05-22_beta-samples-array-all-data.h5 \
+        --a0_infile $CODE_DIR/inputs/2018-05-22_a0-samples-at-all-times.h5 \
+        --num_samples 500 \
+        --tp_min $1\
+        --tp_max $2
