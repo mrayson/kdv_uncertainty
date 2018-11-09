@@ -29,6 +29,10 @@ The following repos are linked to this project:
     
     `sudo docker tag iwaves latest`
     `sudo docker push mrayson/iwaves`
+ 
+ - pull it down on pawsey:
+     
+     `shifter pull mrayson/iwaves`
 
 ---
 
