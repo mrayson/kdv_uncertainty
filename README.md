@@ -5,15 +5,20 @@ Used to generate figures and test ideas for the following papers:
 Manderson et al., 2018, Uncertainty quantification of density and stratification estimates with implications for predicting ocean dynamics, **to be submitted to JAOTEC**
 
 Rayson et al., 2018, Prediction of nonlinear internal wave amplitude in shelf seas with uncertainty quantification, **in preparation**
+See status [here](https://github.com/mrayson/kdv_uncertainty/blob/master/paper-status.md): 
 
-## Other repos
+## Other repositories
 
-The following repos are linked to this project:
+The following code repositories are linked to this project:
 
 - [https://bitbucket.org/mrayson/iwaves] KdV solver code
 - [https://github.com/hhau/ddcurves2] Bayesian inference code (R, Stan) for density-depth profiles (private)
 - [https://bitbucket.org/arcoffhub/run-ddcurves] My code for running the ddcurves package with new data (r wrapper functions)
 - [https://github.com/alan-turing-institute/Soliton] Code for running kdv solver in the azure cloud and shiny dashboard for viewing results. (private)
+
+Slightly related is this project
+
+- [https://bitbucket.org/mrayson/run-kdvshelf/src/master/] Wrapper code for running the KdV model with real topography (not currently used in this paper)
 
 ## Docker run help
 
