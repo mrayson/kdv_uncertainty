@@ -21,11 +21,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from itertools import product
 
-from iwaves.kdv.kdv import  KdV
+#from iwaves.kdv.kdv import  KdV
 from iwaves.kdv.kdvimex import  KdVImEx as KdV
 from iwaves.utils import density as density
-from iwaves import IWaveModes
-from iwaves import kdv, solve_kdv
+from iwaves.utils.imodes import IWaveModes
+from iwaves.kdv.solve import solve_kdv
 from iwaves.utils.viewer import viewer
 
 import h5py
@@ -111,7 +111,7 @@ def run_solver(a0_sample, beta_sample):
     eigen_mde = 0
     runtime = 1.5*86400.
     ntout = 1800.
-    output_x = 75000.
+    output_x = 100000.
 
     # if this outfile gets set to none, then the netcdf is not written to disk
     outfile = None
@@ -210,7 +210,7 @@ def run_solver(a0_sample, beta_sample):
 
   #  print("returning for a0 {}".format(a0_sample))
     return max_output_amplitude, output_amplitude, \
-        max_output_u_surface, max_output_u_seabed
+        max_output_u_surface, max_output_u_seabed, mykdv
 
 
 
@@ -231,6 +231,9 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     slim_outfile.create_dataset("a0_samples",data=np.array(a0_samples))
     slim_outfile.create_dataset("beta_samples",data=np.array(beta_samples))
     all_amplitudes = []
+    all_c1 = []
+    all_r10 = []
+    all_r01 = []
     max_amplitudes = []
     max_u_surface_all = []
     max_u_seabed_all = []
@@ -241,7 +244,7 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         a0_sample = a0_samples[sample]
         beta_sample = beta_samples[:, sample]
         tic = time()
-        max_amplitude, amplitudes, max_u_surface, max_u_seabed =\
+        max_amplitude, amplitudes, max_u_surface, max_u_seabed, mykdv =\
             run_solver(a0_sample, beta_sample)
         toc = time()
         if rank == 0:
@@ -251,6 +254,9 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         max_u_surface_all.append(max_u_surface)
         max_u_seabed_all.append(max_u_seabed)
         all_amplitudes.append(amplitudes)
+        all_c1.append(mykdv.c1)
+        all_r10.append(mykdv.r10)
+        all_r01.append(mykdv.r01)
         if save_all_amplitudes:
             full_output_dir = os.path.join(SOLITON_HOME, "output","full")
             full_outfile_name = os.path.join(full_output_dir,
@@ -274,6 +280,9 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     slim_outfile.create_dataset("max_amplitude",data=np.array(max_amplitudes))
     slim_outfile.create_dataset("max_u_surface",data=np.array(max_u_surface_all))
     slim_outfile.create_dataset("max_u_seabed",data=np.array(max_u_seabed_all))
+    slim_outfile.create_dataset("c1",data=np.array(all_c1))
+    slim_outfile.create_dataset("r10",data=np.array(all_r10))
+    slim_outfile.create_dataset("r01",data=np.array(all_r01))
     slim_outfile.close()
     if upload:
         blob_name = "timepoint-" + str(timepoint)+"/" + timestamp + "_slim-output.h5"

@@ -30,10 +30,14 @@ RUN chmod u+x SOLITON/run_pde_solver_mpi.py
 #RUN mkdir SOLITON/inputs
 
 ## iwaves
-RUN wget https://bitbucket.org/mrayson/iwaves/get/v0.2.0a.tar.gz \
-     && tar xvzf v0.2.0a.tar.gz -C SOLITON \
-     && mv SOLITON/mrayson-iwaves-6ea57f5a55f5 SOLITON/iwaves
+#RUN wget https://bitbucket.org/mrayson/iwaves/get/v0.2.0a.tar.gz \
+#     && tar xvzf v0.2.0a.tar.gz -C SOLITON \
+#     && mv SOLITON/mrayson-iwaves-6ea57f5a55f5 SOLITON/iwaves
 
+# Use pip
+RUN conda install -y git 
+RUN pip install git+https://bitbucket.org/mrayson/iwaves.git@master
+#
 # input a0 and beta files need to be in this directory (or a subdir)
 # in order to copy them to docker image
 #COPY inputs/2018-05-22_a0-samples-at-all-times.h5 SOLITON/inputs

@@ -14,6 +14,21 @@ The following repos are linked to this project:
 - [https://github.com/hhau/ddcurves2] Bayesian inference code (R, Stan) for density-depth profiles (private)
 - [https://github.com/alan-turing-institute/Soliton] Code for running kdv solver in the azure cloud and shiny dashboard for viewing results. (private)
 
+## Docker run help
+
+ - Build the docker file locally and push the container to dockerhub
+
+    `sudo docker build -t iwaves .`
+
+ - Test it runs
+
+    `sudo docker run iwaves python run_pde_solver_mpi.py`
+    (It will crash due to not finding a file but should load the libraries fine...)
+
+ - Push to docker hub   
+    
+    `sudo docker tag iwaves latest`
+    `sudo docker push mrayson/iwaves`
 
 ---
 
