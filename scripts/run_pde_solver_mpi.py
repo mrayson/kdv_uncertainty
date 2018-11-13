@@ -109,7 +109,7 @@ def run_solver(a0_sample, beta_sample):
     dx = 50.
     L_d = 1.2e5
     eigen_mde = 0
-    runtime = 1.5*86400.
+    runtime = 2.2*86400.
     ntout = 1800.
     output_x = 100000.
 
