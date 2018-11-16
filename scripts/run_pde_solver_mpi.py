@@ -84,7 +84,7 @@ def calc_u_velocity(kdv, A):
 
 
 
-def run_solver(a0_sample, beta_sample):
+def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
     """
     instantiate an run the actual PDE solver, returning the full list of output amplitudes, plus the (signed)
     maximum amplitude.
@@ -93,7 +93,7 @@ def run_solver(a0_sample, beta_sample):
     dz = 2.5
     zmax = -252.5
     #z_new = np.linspace(zmax, 0, num = int(abs(zmax/dz)))
-    z_new = np.arange(zmax,dz,dz)
+    z_new = np.arange(0, zmax,-dz)
 #    print("p0 for a0 {}".format(a0_sample))
     profile_sample = double_tanh(z_new, beta_sample)
 #    print("p0.5 for a0 {}".format(a0_sample))
@@ -109,9 +109,9 @@ def run_solver(a0_sample, beta_sample):
     dx = 50.
     L_d = 1.2e5
     eigen_mde = 0
-    runtime = 2.2*86400.
+    #runtime = 2.2*86400.
     ntout = 1800.
-    output_x = 100000.
+    #output_x = 100000.
 
     # if this outfile gets set to none, then the netcdf is not written to disk
     outfile = None
@@ -215,7 +215,7 @@ def run_solver(a0_sample, beta_sample):
 
 
 def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
-                      save_all_amplitudes, upload):
+                      save_all_amplitudes, upload, output_x, runtime):
     """
     Process a single timepoint, doing num_samples samples.
     Save the output in an h5 file along with the input a0 and beta for this timepoint.
@@ -239,13 +239,13 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     max_u_seabed_all = []
     for sample in range(num_samples):
         if rank==0:
-            print("Processing timepoint {}, sample {}, a0 {}".\
-                format(timepoint, sample, a0_samples[sample]))
+            print("Processing timepoint {}, sample {}, a0 {}, runtime {}".\
+                format(timepoint, sample, a0_samples[sample], runtime))
         a0_sample = a0_samples[sample]
         beta_sample = beta_samples[:, sample]
         tic = time()
         max_amplitude, amplitudes, max_u_surface, max_u_seabed, mykdv =\
-            run_solver(a0_sample, beta_sample)
+            run_solver(a0_sample, beta_sample, output_x=output_x, runtime=runtime)
         toc = time()
         if rank == 0:
             print("run time: %3.2f seconds."%(toc-tic))
@@ -326,6 +326,8 @@ if __name__ == '__main__':
                         required=False,default=500)
     parser.add_argument("--num_process", help="how many processes to run in parallel",
                         type=int,default=16)
+    parser.add_argument("--runtime", help="solver run duration [seconds]", default=1.728e5, type=float)
+    parser.add_argument("--output_x", help="x-coordinate for time series output", default=1e5, type=float)
     args = parser.parse_args()
 
 ### what timepoints to do:
@@ -359,5 +361,6 @@ if __name__ == '__main__':
         tp = tps[ii]
         process_timepoint(tp, a0_samples[tp,:num_samples],
                  beta_samples[:,tp,:num_samples],num_samples,
-                 save_all_amplitudes, upload_to_azure)
+                 save_all_amplitudes, upload_to_azure,
+                 args.output_x, args.runtime)
     
