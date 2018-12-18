@@ -118,7 +118,8 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
 #############3
 # Inputs
 
-datadir = '/home/suntans/cloudstor/Data/IMOS/'
+#datadir = '/home/suntans/cloudstor/Data/IMOS/'
+datadir = '../run-ddcurves/DATA_SHELL/'
 
 sites = {
     'KP150':-252.5,
