@@ -19,14 +19,21 @@ from iwaves import kdv
 from iwaves.utils import isw
 from tqdm import tqdm # progress bar
 from glob import glob
+import os
 
 
 def load_density_h5(h5file):
     f = h5py.File(h5file,'r')
+    rho = f['rho'][:]
+    depth = f['depth'][:]
     data = f['beta_samples'][:]
     time = f['time'][:].astype('<M8[ns]')
     f.close()
-    return data,time
+    return data,time, rho, depth
+
+def single_tanh(beta, z):
+    
+    return beta[0] - beta[1]*np.tanh((z+beta[2])/beta[3])
 
 def double_tanh_6(beta, z):
     
@@ -40,7 +47,7 @@ def double_tanh_7(beta, z):
 def calc_nliw_params(h5file, zmin, dz, mode=0):
     
     # Lload the data
-    data,time = load_density_h5(h5file)
+    data,time, rho, depth = load_density_h5(h5file)
     nparam, nt, ntrace = data[:].shape
     
     zout = np.arange(0,zmin, -dz)
@@ -58,7 +65,9 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
         #    print('%d of %d...'%(tstep,nt))
         for ii in range(samples):
             
-            if nparams == 6:
+            if nparams == 4:
+                rhotmp = single_tanh(data[:,tstep, rand_loc[ii]], zout)
+            elif nparams == 6:
                 rhotmp = double_tanh_6(data[:,tstep, rand_loc[ii]], zout)
             elif nparams == 7:
                 rhotmp = double_tanh_7(data[:,tstep, rand_loc[ii]], zout)
@@ -81,14 +90,21 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
     # Export to an xarray data set
     # Create an xray dataset with the output
     dims2 = ('time','ensemble',)
+    dims2a = ('time','depth',)
     dims3 = ('params','time','ensemble')
 
     #time = rho.time.values
     #time = range(nt)
     coords2 = {'time':time, 'ensemble':range(ntrace)}
+    coords2 = {'time':time, 'depth':depth}
     coords3 = {'time':time, 'ensemble':range(ntrace), 'params':range(nparams)}
 
 
+    rho = xr.DataArray(rho,
+        coords=coords2a,
+        dims=dims2a,
+        attrs={'long_name':'', 'units':''},
+     
     cn_da = xr.DataArray(c_ens,
         coords=coords2,
         dims=dims2,
@@ -107,7 +123,7 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
         attrs={'long_name':'', 'units':''},
         )
 
-    dsout = xr.Dataset({'cn':cn_da, 'alpha':alpha_da, 'beta':beta_da,})
+    dsout = xr.Dataset({'cn':cn_da, 'alpha':alpha_da, 'beta':beta_da,'rho':rho})
     
     return dsout
 
@@ -132,14 +148,20 @@ dz = 5.0
 
 
 for sitename in sites.keys():
-    for nparams in [6,7]:
+    for nparams in [4,6,7]:
         h5files = glob('%s/*_%s_*_%dparams_*.h5'%(datadir, sitename, nparams))
         for h5file in h5files:
+
+            outfile = '%s_nliw.nc'%h5file[:-14]
+
+            if os.path.exists(outfile):
+                print('File %s exists... moving on'%outfile)
+                continue
+
             print('%s\n Processing File %s '%(72*'#', h5file))
 
             dsout = calc_nliw_params(h5file, sites[sitename], dz)
 
-            outfile = '%s_nliw.nc'%h5file[:-14]
             dsout.to_netcdf(outfile)
             print('%s\n %s'%(outfile, 72*'#'))
 
