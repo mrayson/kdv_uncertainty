@@ -60,7 +60,7 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
 
     rand_loc = np.random.randint(0, ntrace, samples)
 
-    for tstep in tqdm(range(0,nt)):
+    for tstep in  tqdm(range(0,nt)):
         #if (tstep%20==0):
         #    print('%d of %d...'%(tstep,nt))
         for ii in range(samples):
@@ -96,14 +96,15 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
     #time = rho.time.values
     #time = range(nt)
     coords2 = {'time':time, 'ensemble':range(ntrace)}
-    coords2 = {'time':time, 'depth':depth}
+    coords2a = {'time':time, 'depth':depth[:,0]}
     coords3 = {'time':time, 'ensemble':range(ntrace), 'params':range(nparams)}
 
 
-    rho = xr.DataArray(rho,
+    rho = xr.DataArray(rho.T,
         coords=coords2a,
         dims=dims2a,
         attrs={'long_name':'', 'units':''},
+        )
      
     cn_da = xr.DataArray(c_ens,
         coords=coords2,
@@ -138,7 +139,7 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
 datadir = '../run-ddcurves/DATA_SHELL/'
 
 sites = {
-    'KP150':-252.5,
+    'KP150_12mth':-252.5,
     'PIL200':-205,
     'KIM200':-200,
     'KIM400':-400,
@@ -150,9 +151,12 @@ dz = 5.0
 for sitename in sites.keys():
     for nparams in [4,6,7]:
         h5files = glob('%s/*_%s_*_%dparams_*.h5'%(datadir, sitename, nparams))
+        print(h5files)
         for h5file in h5files:
 
-            outfile = '%s_nliw.nc'%h5file[:-14]
+            outfile = '%s_nliw.nc'%h5file[:-3]
+            print(outfile)
+            #outfile = '%s_nliw.nc'%h5file[:-14]
 
             if os.path.exists(outfile):
                 print('File %s exists... moving on'%outfile)
