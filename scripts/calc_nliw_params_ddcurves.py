@@ -136,21 +136,24 @@ def calc_nliw_params(h5file, zmin, dz, mode=0):
 # Inputs
 
 #datadir = '/home/suntans/cloudstor/Data/IMOS/'
-datadir = '../run-ddcurves/DATA_SHELL/'
+datadir = '../run_ddcurves/DATA_SHELL/'
+#datadir = '/home/suntans/Share/ARCHub/MODELLING/DensityFitting/run_ddcurves/DATA_SHELL'
 
 sites = {
     'KP150_12mth':-252.5,
-    'PIL200':-205,
-    'KIM200':-200,
-    'KIM400':-400,
-    'ITFTIS':-460,
+    #'PIL200':-205,
+    #'KIM200':-200,
+    #'KIM400':-400,
+    #'ITFTIS':-460,
 }
 dz = 5.0
 
 
 for sitename in sites.keys():
-    for nparams in [4,6,7]:
-        h5files = glob('%s/*_%s_*_%dparams_*.h5'%(datadir, sitename, nparams))
+    for nparams in [6]:
+        globstr = '%s/*_%s_*_%dparams_*.h5'%(datadir, sitename, nparams)
+        print(globstr)
+        h5files = glob(globstr)
         print(h5files)
         for h5file in h5files:
 
