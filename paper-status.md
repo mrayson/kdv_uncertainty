@@ -6,15 +6,17 @@
  - Github repo for running and analysing the cloud runs [https://github.com/mrayson/kdv_uncertainty] (this one!)
  - See links to other repositories in [README.md](https://github.com/mrayson/kdv_uncertainty/blob/master/README.md)
 
-## TODO
+## TODO Modelling
 
- - Currently running new runs with boundary forcing instead of ICs on magnus (9/11/2018)
- - Extract the CRUX nearbed velocity data for an independent validation
- - Check definition of alpha and r10 in the paper
+ - Compute a_0 via optimization
+ - ~Currently running new runs with boundary forcing instead of ICs on magnus (9/11/2018)~
+ - ~Extract the CRUX nearbed velocity data for an independent validation~
+ - ~Check definition of alpha and r10 in the paper~
  
-## Paper
+## TODO Paper
 
  - Introduction w/ motivation
+ - Writeup vkdv model equations and discretisation
  - Update how the model is forced (boundary conditions instead of ICs)
  - Key result to show is the "Amax vs Ls" plot
  - Bayesian method for density profile initial condition

@@ -95,20 +95,27 @@ datadir = '../run_ddcurves/DATA_SHELL/'
 # ddcurves BHM output file
 nparams=6
 #h5file = '%s/Crux_KP150_12mth_Density_lowpass_density_bhm_6params_2018-12-16.h5'%datadir
-h5file = '%s/Crux_KP150_Phs2_Density_lowpass_density_bhm_6params_2018-11-23.h5'%datadir
+#h5file = '%s/Crux_KP150_Phs2_Density_lowpass_density_bhm_6params_2018-11-23.h5'%datadir
 
 density_func = double_tanh_6
 
+
+datadir = '/home/suntans/cloudstor/Data/IMOS/'
+ncfile = '%sCrux_KP150_12mth_Density_lowpass_density_bhm_6params_2018-12-19_nliw.nc'%datadir
+
+mode = 0
+########
 
 # In[72]:
 
 
 # Load the output of ddcurves as an xarray object
-ds = load_density_xr(h5file)
+#ds = load_density_xr(h5file)
+ds = xr.open_dataset(ncfile)
 ds
 
-plt.figure()
-ds.beta[0,:,:].median(axis=-1).plot()
+#plt.figure()
+#ds.beta[0,:,:].median(axis=-1).plot()
 # In[73]:
 
 
@@ -120,13 +127,13 @@ ds1 = xr.open_dataset(ncfile,group='KP150_phs1')
 ds2 = xr.open_dataset(ncfile,group='KP150_phs2')
 
 # Merge the two
-A_n = xr.concat([ds1['A_n'][:,0],ds2['A_n'][:,0]], dim='time')
+A_n = xr.concat([ds1['A_n'][:,mode],ds2['A_n'][:,mode]], dim='time')
 
-plt.figure()
+#plt.figure()
 #ax=plt.subplot(211)
-A_n.plot(lw=0.2)
-plt.grid(b=True)
-plt.ylim(-70,70)
+#A_n.plot(lw=0.2)
+#plt.grid(b=True)
+#plt.ylim(-70,70)
 # In[133]:
 
 
@@ -134,8 +141,8 @@ plt.ylim(-70,70)
 time1 = pd.date_range('2016-5-1','2016-9-15') 
 time2 = pd.date_range('2016-11-1','2017-5-1')
 
-#time = time1.append(time2)
-time = time2
+time = time1.append(time2)
+#time = time2
 
 
 # In[ ]:
@@ -157,9 +164,9 @@ for t1,t2 in zip(time[0:-1],time[1::]):
     dsc=ds.sel(time=t2,method='nearest')
     meanbeta = dsc.beta.median(axis=-1).values
     #print('{}, {}, {}'.format(t1, A.time.values[idx], Amax, ))
-    outstr = '%s, %s, %3.2f'%(t1, A.time.values[idx], Amax, )
+    outstr = '%s, %s, %3.3f'%(t1, A.time.values[idx], Amax, )
     for bb in meanbeta:
-        outstr +=', %3.2f'%bb
+        outstr +=', %3.3f'%bb
 
     print(outstr)
     #print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(t1, A.time.values[idx], Amax, dsc.beta.mean(axis=-1).values) )
