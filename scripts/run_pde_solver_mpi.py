@@ -73,6 +73,10 @@ def maximum_amplitude_finder(amp_signal):
             return amp_min
         else:
             return amp_max
+    if np.abs(amp_min)>amp_max:
+        return amp_min, np.argwhere(amp_signal==amp_min)[0][0]
+    else:
+        return amp_max, np.argwhere(amp_signal==amp_max)[0][0]
 
 def calc_u_velocity(kdv, A):
     # Linear streamfunction
@@ -204,13 +208,14 @@ def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
     #    plt.plot(output_u_seabed)
     #    plt.show()
 
-    max_output_amplitude = maximum_amplitude_finder(output_amplitude)
-    max_output_u_surface = maximum_amplitude_finder(output_u_surface)
-    max_output_u_seabed = maximum_amplitude_finder(output_u_seabed)
+    max_output_amplitude, tidx = maximum_amplitude_finder(output_amplitude)
+    max_output_u_surface, _ = maximum_amplitude_finder(output_u_surface)
+    max_output_u_seabed, _ = maximum_amplitude_finder(output_u_seabed)
+    tmax = tidx*mykdv.dt_s
 
   #  print("returning for a0 {}".format(a0_sample))
     return max_output_amplitude, output_amplitude, \
-        max_output_u_surface, max_output_u_seabed, mykdv
+        max_output_u_surface, max_output_u_seabed, tmax, mykdv
 
 
 
@@ -237,6 +242,7 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     max_amplitudes = []
     max_u_surface_all = []
     max_u_seabed_all = []
+    all_tmax = []
     for sample in range(num_samples):
         if rank==0:
             print("Processing timepoint {}, sample {}, a0 {}, runtime {}".\
@@ -244,7 +250,7 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         a0_sample = a0_samples[sample]
         beta_sample = beta_samples[:, sample]
         tic = time()
-        max_amplitude, amplitudes, max_u_surface, max_u_seabed, mykdv =\
+        max_amplitude, amplitudes, max_u_surface, max_u_seabed, tmax, mykdv =\
             run_solver(a0_sample, beta_sample, output_x=output_x, runtime=runtime)
         toc = time()
         if rank == 0:
@@ -257,6 +263,7 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         all_c1.append(mykdv.c1)
         all_r10.append(mykdv.r10)
         all_r01.append(mykdv.r01)
+        all_tmax.append(tmax)
         if save_all_amplitudes:
             full_output_dir = os.path.join(SOLITON_HOME, "output","full")
             full_outfile_name = os.path.join(full_output_dir,
@@ -283,6 +290,7 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     slim_outfile.create_dataset("c1",data=np.array(all_c1))
     slim_outfile.create_dataset("r10",data=np.array(all_r10))
     slim_outfile.create_dataset("r01",data=np.array(all_r01))
+    slim_outfile.create_dataset("tmax",data=np.array(all_tmax))
     slim_outfile.close()
     if upload:
         blob_name = "timepoint-" + str(timepoint)+"/" + timestamp + "_slim-output.h5"
@@ -324,8 +332,8 @@ if __name__ == '__main__':
     parser.add_argument("--save_all_amplitudes", help="save all output amplitudes",action='store_true')
     parser.add_argument("--num_samples", help="number of samples per timepoint",type=int,
                         required=False,default=500)
-    parser.add_argument("--num_process", help="how many processes to run in parallel",
-                        type=int,default=16)
+    #parser.add_argument("--num_process", help="how many processes to run in parallel",
+    #                    type=int,default=16)
     parser.add_argument("--runtime", help="solver run duration [seconds]", default=1.728e5, type=float)
     parser.add_argument("--output_x", help="x-coordinate for time series output", default=1e5, type=float)
     args = parser.parse_args()
@@ -339,7 +347,7 @@ if __name__ == '__main__':
     elif args.tp_max:
         tp_max = args.tp_max
     else:
-        tp_max = 1473
+        tp_max = 1480
 
     if rank == 0:
         print("Will execute timepoints {} to {} on core {}".format(tp_min, tp_max, rank))

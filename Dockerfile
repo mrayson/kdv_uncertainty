@@ -21,8 +21,9 @@ LABEL maintainer="matt.rayson@uwa.edu.au"
 #ENV SOLITON_HOME /SOLITON
 #RUN chmod u+x SOLITON/python_utils/run_pde_solver.py
 
-ADD scripts /SOLITON
-RUN chmod u+x SOLITON/run_pde_solver_mpi.py
+# Not necessary on shifter
+#ADD scripts /SOLITON
+#RUN chmod u+x SOLITON/run_pde_solver_mpi.py
 
 #RUN mkdir SOLITON/output
 #RUN mkdir SOLITON/output/slim
@@ -43,9 +44,10 @@ RUN pip install git+https://bitbucket.org/mrayson/iwaves.git@master
 #COPY inputs/2018-05-22_a0-samples-at-all-times.h5 SOLITON/inputs
 #COPY inputs/2018-05-22_beta-samples-array-all-data.h5 SOLITON/inputs
 
-ENV PYTHONPATH /SOLITON
+#ENV PYTHONPATH /SOLITON
+#
+#WORKDIR SOLITON
 
-WORKDIR SOLITON
 #RUN python3.6 -c "import iwaves;print('iwaves successfully imported')"
 #RUN python -c "import numpy as np;np.__config__.show();import iwaves"
 #RUN ls inputs/
