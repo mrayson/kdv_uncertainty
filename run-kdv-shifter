@@ -8,6 +8,8 @@
 #SBATCH --output=LOGS/kdvshifter-%j.out
 #SBATCH --nodes=6
 #SBATCH --ntasks=144
+##SBATCH --nodes=1
+##SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
 ##SBATCH --mem=64000
 #SBATCH --mail-type=ALL
