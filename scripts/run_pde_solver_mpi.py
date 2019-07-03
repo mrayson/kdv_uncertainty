@@ -67,12 +67,12 @@ def zeroic(x,a0,Lw,x0=0):
 # find the (signed) maximum deviation from zero
 
 def maximum_amplitude_finder(amp_signal):
-        amp_min = min(amp_signal)
-        amp_max = max(amp_signal)
-        if abs(amp_min)>amp_max:
-            return amp_min
-        else:
-            return amp_max
+    amp_min = min(amp_signal)
+    amp_max = max(amp_signal)
+    #if abs(amp_min)>amp_max:
+    #    return amp_min
+    #else:
+    #    return amp_max
     if np.abs(amp_min)>amp_max:
         return amp_min, np.argwhere(amp_signal==amp_min)[0][0]
     else:
