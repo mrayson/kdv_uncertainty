@@ -1,0 +1,23 @@
+#!/bin/bash --login
+#
+#SBATCH --account=pawsey0106
+##SBATCH --time=24:00:00
+#SBATCH --time=00:10:00
+##SBATCH --partition=workq
+#SBATCH --partition=debugq
+#SBATCH --output=LOGS/shifterpy-%j.out
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+##SBATCH --mem=64000
+##SBATCH --mail-type=ALL
+##SBATCH --mail-user=matt.rayson@uwa.edu.au
+
+module load shifter
+
+export PYTHON_HOME=$MYSCRATCH/KDV
+
+srun -u --export=all \
+    #shifter run --mpi mrayson/iwaves \
+    shifter run --mpi mrayson/iwaves \
+    python -u $1

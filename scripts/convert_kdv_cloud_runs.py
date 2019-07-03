@@ -13,12 +13,26 @@ from datetime import datetime
 
 import pandas as pd
 import xarray as xr
-
-
 from iwaves.utils import isw
-
 import matplotlib.pyplot as plt
-from tqdm import tqdm # progress bar
+
+import os 
+import sys
+from time import gmtime, strftime, time
+
+if "PYTHON_HOME" in os.environ.keys():
+    PYTHON_HOME = os.environ["PYTHON_HOME"]
+else:
+    PYTHON_HOME = "."
+sys.path.append(PYTHON_HOME)
+
+slim_output_dir = os.path.join(PYTHON_HOME, "output","slim")
+slimfiles = os.path.join(slim_output_dir,'*.h5')
+print(slimfiles)
+
+timestamp = strftime("%Y-%m-%d--%H-%M-%S", gmtime())
+outfile = os.path.join(PYTHON_HOME,'output','{}_magnus_kdv_runs.nc'.format(timestamp))
+
 
  
 # Data are stored in individual hdf5 files for each step (1473) and each sample (500)
@@ -39,7 +53,10 @@ from tqdm import tqdm # progress bar
 # In[4]:
 
 # Get the summary file for new amplitudes
-datafiles = sorted(glob("output/slim/*.h5"))
+datafiles = sorted(glob(slimfiles))
+if len(datafiles)==0:
+    print('Found no data files!!!')
+
 get_new_summary_file = {}
 for df in datafiles:
     tstep = int(df.split('_')[-2].split('-')[-1])
@@ -50,7 +67,7 @@ for df in datafiles:
 
 def load_h5_step_slim(varname, timepoint):
     file = get_new_summary_file[timepoint]
-    #print(file)
+    print(file)
 
     h5 = h5py.File(file,'r')
     #a0 = da.from_array( h5[varname].value, chunks=-1)
@@ -69,6 +86,7 @@ def load_h5_step_slim(varname, timepoint):
 nt = 1479
 nsamples = 500
 amax_t = np.zeros((nsamples,nt))
+tmax_t = np.zeros((nsamples,nt))
 ubed_max_t = np.zeros((nsamples,nt))
 usurf_max_t = np.zeros((nsamples,nt))
 
@@ -93,6 +111,7 @@ for ii in range(0,nt):
     #if ns < 500:
     #    print('Only found %d sample for step %d'%(ns,ii))
     #alpha_tmp, c_tmp = calc_alpha(beta_tmp.T, zout, nsamples=ns, mode=0)    
+    tmax_tmp = load_h5_step_slim('tmax', ii+1)
     c_tmp = load_h5_step_slim('c1', ii+1)
     r10 = load_h5_step_slim('r10', ii+1)
     alpha_tmp = -2*c_tmp*r10
@@ -100,6 +119,7 @@ for ii in range(0,nt):
     #print(a0_tmp.max())
     a0_t[0:ns,ii] = a0_tmp
     amax_t[0:ns,ii] = amax_tmp
+    tmax_t[0:ns,ii] = tmax_tmp
     ubed_max_t[0:ns,ii] = ubed_tmp
     usurf_max_t[0:ns,ii] = usurf_tmp
     alpha_t[0:ns,ii] = alpha_tmp
@@ -121,6 +141,12 @@ coords2 = {'time':time, 'ensemble':range(nsamples)}
 coords3 = {'time':time, 'ensemble':range(nsamples), 'params':range(6)}
            
 amax_da = xr.DataArray(amax_t,
+                coords=coords2,
+                dims=dims2,
+                attrs={'long_name':'', 'units':''},
+                )
+
+tmax_da = xr.DataArray(tmax_t,
                 coords=coords2,
                 dims=dims2,
                 attrs={'long_name':'', 'units':''},
@@ -163,6 +189,7 @@ beta_da = xr.DataArray(beta_t,
     )
 
 dsout = xr.Dataset({'amax':amax_da,\
+    'tmax':tmax_da,\
     'a0':a0_da,\
     'cn':cn_da,\
     'alpha':alpha_da,\
