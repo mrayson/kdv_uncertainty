@@ -22,10 +22,11 @@ import pandas as pd
 from itertools import product
 
 #from iwaves.kdv.kdv import  KdV
-from iwaves.kdv.kdvimex import  KdVImEx as KdV
+#from iwaves.kdv.kdvimex import  KdVImEx as KdV
+from iwaves.kdv.vkdv import  vKdV
 from iwaves.utils import density as density
 from iwaves.utils.imodes import IWaveModes
-from iwaves.kdv.solve import solve_kdv
+#from iwaves.kdv.solve import solve_kdv
 from iwaves.utils.viewer import viewer
 
 import h5py
@@ -112,21 +113,11 @@ def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
     rho_std = 1.5
     rho_mu = 1024.
     z_std = 100.
-    #z_new = np.linspace(zmax, 0, num = int(abs(zmax/dz)))
     z_new = np.arange(0, zmax,-dz)
 #    print("p0 for a0 {}".format(a0_sample))
     #rho_sample = double_tanh(z_new, beta_sample)
     rho_sample = double_tanh(z_new/z_std, beta_sample)*rho_std + rho_mu
     
-#    print("p0.5 for a0 {}".format(a0_sample))
-
-    #iw_modes_output = IWaveModes(profile_sample,\
-    #    z_new, density_class=density.InterpDensity)
-    #    #z_new, density_class=density.FitDensity, density_func='double_tanh')
-#   # print("p0.9 for a0 {}".format(a0_sample))
-    #phi, c, he, zout = iw_modes_output(zmax, dz, 0)
-
-#    print("p1 for a0 {}".format(a0_sample))
     # more runtime parameters
     dx = 50.
     L_d = 1.2e5
@@ -149,73 +140,50 @@ def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
       ekdv=False,\
       wavefunc=zeroic,\
       spongedist = 10000.,\
-      #L_d = L_d,\
-      #Nx = int(np.ceil(2*L_d/dx)),\
-      #Ricr=2.0,\
-      #k_diss=1.0,
       )
 #    print("p2 for a0 {}".format(a0_sample))
     omega = 2*np.pi/(12.42*3600)
 
-    # No longer need this with zero initial conditions
-    #k = omega/iw_modes_output.c1
-    #Lw = 2*np.pi/k
-    #kdvargs['Lw'] = Lw
-    #kdvargs['x0'] = -1.5*Lw
-
-    x_domain = np.arange(0,L_d+dx, dx)
+    #x_domain = np.arange(0,L_d+dx, dx)
 
     # Find the ouput x location
     xpt = np.argwhere(x_domain >= output_x)[0,0]
 
     
     # Boundary forcing function
-    def sinebc(t):
+    def bcfunc(t):
         return a0_sample*np.sin(omega*t)
 
 
-    # initalise the solver object
-    #mykdv0 = kdv.KdV(iw_modes_output.rhoZ, iw_modes_output.Z, **kdvargs)
- #   print("initialized kdv object for a0 {}".format(a0_sample))
-
-    # 8400 corresponds to the first grid point that is 1e5 meters away from
-    # the initial point
     def amp_at_x(kdv):
-      
-      #u_vel, w_vel = kdv.calc_velocity()
-      u_vel = calc_u_velocity(kdv, kdv.B[xpt])
-      # u_vel is now a matrix size [Nx, Nz]
-      u_surface = u_vel[0]
-      u_seabed = u_vel[-1]
+   
+        #u_vel, w_vel = kdv.calc_velocity()
+        u_vel = calc_u_velocity(kdv, kdv.B[xpt])
+        # u_vel is now a matrix size [Nx, Nz]
+        u_surface = u_vel[0]
+        u_seabed = u_vel[-1]
 
-      return kdv.B[xpt], u_surface, u_seabed
+        return kdv.B[xpt], u_surface, u_seabed
 
-    # Need seabed and seasurface currents
-    # This is calculated using the calc_velocity method e.g.
-    #    u_vel, w_vel = kdv.calc_velocity()
+    # Parse the density and depth files
+    depthtxt = np.loadtxt(depthfile, delimiter=',')
 
-    # Maximum current profile?
+    # Initialise the KdV class
+    mykdv = vKdV(rho, z, depthtxt[:,1], \
+        x=depthtxt[:,0], **kdvargs)
 
-    # Isotherm displacement amplitude
+    ## Run the model
+    nn=0
+    myoutput = []
+    for ii in range(nsteps):
+        if mykdv.solve_step(bc_left=bcfunc(mykdv.t)) != 0:
+            print( 'Blowing up at step: %d'%ii)
+            break
+        
+        # Evalute the function
+        myoutput.append(amp_at_x(mykdv))
 
-    # Wave length / Period?
 
-    # Output in 2D space (x-y) would also be useful i.e. the projection of the maximum
-    # seabed current onto an oblique structure like a pipeline. I have no idea
-    # how to do these things
-
-    #mykdv, B, output_amplitude = solve_kdv(iw_modes_output.rhoZ, iw_modes_output.Z, runtime,\
-    mykdv, B, output_amplitude = solve_kdv(rho_sample, z_new, runtime,\
-            solver='imex',\
-            ntout=ntout, outfile=outfile,\
-            x = x_domain,
-            bcfunc=sinebc,
-            myfunc=amp_at_x,\
-            **kdvargs)
-  #  print("finished running solver for a0 {}".format(a0_sample))
-    #output_amplitude = np.array(output_amplitude[0])
-    #output_u_surface = np.array(output_amplitude[1])
-    #output_u_seabed = np.array(output_amplitude[2])
     output = np.array( [[aa[0], aa[1], aa[2]] for aa in output_amplitude])
     output_amplitude = output[:,0]
     output_u_surface = output[:,1]
