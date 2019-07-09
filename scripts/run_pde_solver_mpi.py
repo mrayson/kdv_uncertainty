@@ -66,7 +66,7 @@ def zeroic(x,a0,Lw,x0=0):
 
 # find the (signed) maximum deviation from zero
 
-def maximum_amplitude_finder(amp_signal):
+def maximum_amplitude_finder_old(amp_signal):
     amp_min = min(amp_signal)
     amp_max = max(amp_signal)
     #if abs(amp_min)>amp_max:
@@ -77,6 +77,19 @@ def maximum_amplitude_finder(amp_signal):
         return amp_min, np.argwhere(amp_signal==amp_min)[0][0]
     else:
         return amp_max, np.argwhere(amp_signal==amp_max)[0][0]
+    
+def maximum_amplitude_finder(amp_signal):
+    amp_min = np.min(amp_signal)
+    amp_max = np.max(amp_signal)
+    if np.abs(amp_min)>amp_max:
+        bidx = (amp_signal>=amp_min) & (amp_signal<= amp_min -0.01*amp_min)
+        idx = np.argwhere(bidx)
+        return amp_min, idx[0][0]
+    else:
+        bidx = (amp_signal<=amp_max) & (amp_signal>= amp_max -0.01*amp_max)
+        idx = np.argwhere(bidx)
+        return amp_max, idx[0][0]
+    
 
 def calc_u_velocity(kdv, A):
     # Linear streamfunction

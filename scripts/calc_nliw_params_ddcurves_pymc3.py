@@ -157,14 +157,14 @@ dz = 5.
 
 
 h5files =[ 
-    '%s/ShellCrux_Unfiltered_Density_BHM_MCMC_0203Aug2016.h5'%datadir,
-    '%s/ShellCrux_Unfiltered_Density_BHM_VI_0203Aug2016.h5'%datadir,
-    '%s/ShellCrux_Filtered_Density_BHM_MCMC_20162017.h5'%datadir,
-    '%s/ShellCrux_Filtered_Density_BHM_MCMC_Jul2016.h5'%datadir,
-    '%s/ShellCrux_Filtered_Density_BHM_VI_20162017.h5'%datadir,
-    '%s/ShellCrux_Filtered_Density_BHM_VI_Jul2016.h5'%datadir,
+    #'%s/ShellCrux_Unfiltered_Density_BHM_MCMC_0203Aug2016.h5'%datadir,
+    #'%s/ShellCrux_Unfiltered_Density_BHM_VI_0203Aug2016.h5'%datadir,
+    #'%s/ShellCrux_Filtered_Density_BHM_MCMC_20162017.h5'%datadir,
+    #'%s/ShellCrux_Filtered_Density_BHM_MCMC_Jul2016.h5'%datadir,
+    #'%s/ShellCrux_Filtered_Density_BHM_VI_20162017.h5'%datadir,
+    #'%s/ShellCrux_Filtered_Density_BHM_VI_Jul2016.h5'%datadir,
     #'%s/ShellCrux_Uniltered_Density_BHM_MCMC_20162017.h5'%datadir,
-    #'%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
+    '%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
     ]
 
 
