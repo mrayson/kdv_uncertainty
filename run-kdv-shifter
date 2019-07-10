@@ -23,11 +23,9 @@ export CODE_DIR=$MYGROUP/KDV
 srun -u --export=all \
     shifter run --mpi mrayson/iwaves \
     python -u scripts/run_pde_solver_mpi.py \
-        #--beta_infile $CODE_DIR/inputs/Crux_KP150_12mth_Density_lowpass_beta-samples-array-all-data.h5 \
-        #--a0_infile $CODE_DIR/inputs/a0_samples_optimal_a0_all_times.h5 \
         --beta_infile $CODE_DIR/inputs/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5 \
         --a0_infile $CODE_DIR/inputs/a0_samples_harmonic_a0_all_times.h5 \
-        --output_x 150000 \
+        --output_x 100000 \
         --num_samples 500 \
-        --tp_min $1\
-        --tp_max $2
+        --tp_min 1\
+        --tp_max 374

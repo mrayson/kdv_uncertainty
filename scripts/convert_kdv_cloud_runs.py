@@ -83,7 +83,8 @@ def load_h5_step_slim(varname, timepoint):
 # # Load the newly generated data
 
 # Get amax/a0 for all steps
-nt = 1479
+#nt = 1479
+nt = 373
 nsamples = 500
 amax_t = np.zeros((nsamples,nt))
 tmax_t = np.zeros((nsamples,nt))
