@@ -32,10 +32,12 @@ from iwaves.utils.viewer import viewer
 import h5py
 #from multiprocessing import Pool, TimeoutError
 from time import gmtime, strftime, time
+import yaml
 
 #from azure.storage.blob import BlockBlobService, PublicAccess
 
 from mpi4py import MPI
+
 
 # MPI variables
 comm = MPI.COMM_WORLD
@@ -100,65 +102,69 @@ def calc_u_velocity(kdv, A):
 
     return np.gradient(psi, -kdv.dz_s)
 
+def calc_u_velocity_1d(kdv, A, idx):
+    # Linear streamfunction
+    psi = A * kdv.phi_1[:,idx] * kdv.c1[idx]
+    # First-order nonlinear terms
+    psi += A**2. * kdv.phi10[:,idx] * kdv.c1[idx]**2.
+
+    return np.gradient(psi, -kdv.dZ[idx])
 
 
-def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
+
+
+def run_solver(a0_sample, beta_sample, infile, depthfile,):
     """
     instantiate an run the actual PDE solver, returning the full list of output amplitudes, plus the (signed)
     maximum amplitude.
     """
-#    print("running kdv solver for a0 {}".format(a0_sample))
-    dz = 2.5
-    zmax = -252.5
-    rho_std = 1.5
-    rho_mu = 1024.
-    z_std = 100.
-    z_new = np.arange(0, zmax,-dz)
-#    print("p0 for a0 {}".format(a0_sample))
-    #rho_sample = double_tanh(z_new, beta_sample)
-    rho_sample = double_tanh(z_new/z_std, beta_sample)*rho_std + rho_mu
-    
-    # more runtime parameters
-    dx = 50.
-    L_d = 1.2e5
-    eigen_mde = 0
-    #runtime = 2.2*86400.
-    ntout = 1800.
-    #output_x = 100000.
+   
+    # Parse the yaml file
+    with open(infile, 'r') as f:
+        args = yaml.load(f)
 
-    # if this outfile gets set to none, then the netcdf is not written to disk
-    outfile = None
+        kdvargs = args['kdvargs']
+        kdvargs.update({'wavefunc':zeroic})
 
-    kdvargs = dict(\
-      verbose=False,\
-      a0=a0_sample,\
-      Lw=0.,\
-      eigen_mde=eigen_mde,
-      Cmax=0.8,\
-      dt=20.,\
-      nu_H=0.0,\
-      ekdv=False,\
-      wavefunc=zeroic,\
-      spongedist = 10000.,\
-      )
-#    print("p2 for a0 {}".format(a0_sample))
+        # Set the buoyancy eigenfunction to save time (not used here...)
+        kdvargs.update({'D10':-1})
+        kdvargs.update({'D01':-1})
+        kdvargs.update({'D20':-1})
+
+        runtime = args['runtime']['runtime']
+        ntout = args['runtime']['ntout']
+        output_x =  args['runtime']['xpt']
+
+    # Parse the density and depth files
+    depthtxt = np.loadtxt(depthfile, delimiter=',')
+
+    x_domain = depthtxt[:,0]
+
+
+    #    print("p2 for a0 {}".format(a0_sample))
     omega = 2*np.pi/(12.42*3600)
 
     #x_domain = np.arange(0,L_d+dx, dx)
-
+    #    print("running kdv solver for a0 {}".format(a0_sample))
+    rho_std = 1.5
+    rho_mu = 1024.
+    z_std = 100.
+    #z_new = np.arange(0, zmax,-dz)
+    dz = 5
+    z_new = np.arange(-depthtxt[0,1],dz,dz)[::-1]
+    #rho_sample = double_tanh(z_new, beta_sample)
+    rho_sample = double_tanh(z_new/z_std, beta_sample)*rho_std + rho_mu
+ 
     # Find the ouput x location
     xpt = np.argwhere(x_domain >= output_x)[0,0]
-
     
     # Boundary forcing function
     def bcfunc(t):
         return a0_sample*np.sin(omega*t)
 
-
     def amp_at_x(kdv):
-   
         #u_vel, w_vel = kdv.calc_velocity()
-        u_vel = calc_u_velocity(kdv, kdv.B[xpt])
+        u_vel = calc_u_velocity_1d(kdv, kdv.B[xpt], xpt)
         # u_vel is now a matrix size [Nx, Nz]
         u_surface = u_vel[0]
         u_seabed = u_vel[-1]
@@ -169,19 +175,20 @@ def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
     depthtxt = np.loadtxt(depthfile, delimiter=',')
 
     # Initialise the KdV class
-    mykdv = vKdV(rho, z, depthtxt[:,1], \
+    mykdv = vKdV(rho_sample, z_new, depthtxt[:,1], \
         x=depthtxt[:,0], **kdvargs)
 
     ## Run the model
+    nsteps = int(runtime // kdvargs['dt'])
     nn=0
-    myoutput = []
+    output_amplitude = []
     for ii in range(nsteps):
         if mykdv.solve_step(bc_left=bcfunc(mykdv.t)) != 0:
             print( 'Blowing up at step: %d'%ii)
             break
         
         # Evalute the function
-        myoutput.append(amp_at_x(mykdv))
+        output_amplitude.append(amp_at_x(mykdv))
 
 
     output = np.array( [[aa[0], aa[1], aa[2]] for aa in output_amplitude])
@@ -199,14 +206,13 @@ def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
     max_output_u_seabed, _ = maximum_amplitude_finder(output_u_seabed)
     tmax = tidx*mykdv.dt_s
 
-  #  print("returning for a0 {}".format(a0_sample))
     return max_output_amplitude, output_amplitude, \
-        max_output_u_surface, max_output_u_seabed, tmax, mykdv
+        max_output_u_surface, max_output_u_seabed, tmax, mykdv, xpt
 
 
 
 def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
-                      save_all_amplitudes, upload, output_x, runtime):
+                     infile, depthfile ):
     """
     Process a single timepoint, doing num_samples samples.
     Save the output in an h5 file along with the input a0 and beta for this timepoint.
@@ -225,106 +231,79 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     all_c1 = []
     all_r10 = []
     all_r01 = []
+    all_c1_mu = []
+    all_r10_mu = []
     max_amplitudes = []
     max_u_surface_all = []
     max_u_seabed_all = []
     all_tmax = []
     for sample in range(num_samples):
         if rank==0:
-            print("Processing timepoint {}, sample {}, a0 {}, runtime {}".\
-                format(timepoint, sample, a0_samples[sample], runtime))
+            print("Processing timepoint {}, sample {}, a0 {}, infile {}".\
+                format(timepoint, sample, a0_samples[sample], infile))
         a0_sample = a0_samples[sample]
         beta_sample = beta_samples[:, sample]
         tic = time()
-        max_amplitude, amplitudes, max_u_surface, max_u_seabed, tmax, mykdv =\
-            run_solver(a0_sample, beta_sample, output_x=output_x, runtime=runtime)
+        max_amplitude, amplitudes, max_u_surface, max_u_seabed, tmax, mykdv, xpt =\
+            run_solver(a0_sample, beta_sample, infile, depthfile )
         toc = time()
+
         if rank == 0:
-            print("run time: %3.2f seconds."%(toc-tic))
-   #     print("Ran solver for timepoint {}, sample {}".format(timepoint, sample))
+            print("Amax %3.2f, Tmax %1.3e, run time: %3.2f seconds."%(
+                max_amplitude, tmax, toc-tic))
+
+       #     print("Ran solver for timepoint {}, sample {}".format(timepoint, sample))
         max_amplitudes.append(max_amplitude)
         max_u_surface_all.append(max_u_surface)
         max_u_seabed_all.append(max_u_seabed)
         all_amplitudes.append(amplitudes)
-        all_c1.append(mykdv.c1)
-        all_r10.append(mykdv.r10)
-        all_r01.append(mykdv.r01)
+        all_c1.append(mykdv.c1[xpt])
+        all_r10.append(mykdv.r10[xpt])
+        all_r01.append(mykdv.r01[xpt])
         all_tmax.append(tmax)
-        if save_all_amplitudes:
-            full_output_dir = os.path.join(SOLITON_HOME, "output","full")
-            full_outfile_name = os.path.join(full_output_dir,
-                                             "{}_timepoint-{}_sample-{}_output.h5".format(timestamp,
-                                                                                          timepoint,
-                                                                                          sample))
-            full_outfile = h5py.File(full_outfile_name,"w")
-            full_outfile.create_dataset("timepoint", data=timepoint)
-            full_outfile.create_dataset("sample", data=sample)
-            full_outfile.create_dataset("a0_sample",data=a0_sample)
-            full_outfile.create_dataset("beta_samples",data=beta_sample)
-            full_outfile.create_dataset("amplitudes",data=amplitudes)
-            full_outfile.create_dataset("max_amplitude",data=max_amplitude)
-            full_outfile.close()
-            if upload:
-                blob_name = "timepoint-{}/all_amplitudes/{}_timepoint-{}_sample-{}_output.h5"\
-                            .format(timepoint,timestamp,timepoint,sample)
-                upload_file_to_azure(full_outfile_name,blob_name)
-                pass
-        pass
+
+        # Calculate mean quantities\n",
+        dx = mykdv.x[1]-mykdv.x[0]
+        nx = mykdv.x.shape[0]
+        L = np.arange(1,nx+1,1)*dx
+        c_mu_t = np.cumsum(mykdv.c1*dx) / L
+        r10_mu_t = np.cumsum(mykdv.r10*dx) / L
+        all_c1_mu.append(c_mu_t[xpt])
+        all_r10_mu.append(r10_mu_t[xpt])
+
+
     slim_outfile.create_dataset("max_amplitude",data=np.array(max_amplitudes))
     slim_outfile.create_dataset("max_u_surface",data=np.array(max_u_surface_all))
     slim_outfile.create_dataset("max_u_seabed",data=np.array(max_u_seabed_all))
     slim_outfile.create_dataset("c1",data=np.array(all_c1))
     slim_outfile.create_dataset("r10",data=np.array(all_r10))
+    slim_outfile.create_dataset("c1_mu",data=np.array(all_c1_mu))
+    slim_outfile.create_dataset("r10_mu",data=np.array(all_r10_mu))
     slim_outfile.create_dataset("r01",data=np.array(all_r01))
     slim_outfile.create_dataset("tmax",data=np.array(all_tmax))
     slim_outfile.close()
-    if upload:
-        blob_name = "timepoint-" + str(timepoint)+"/" + timestamp + "_slim-output.h5"
-        upload_file_to_azure(slim_outfile_name,blob_name)
-        pass
-    return(None)
 
-#def upload_file_to_azure(file_path, blob_name):
-#    """
-#    upload a file to an azure blob.
-#    Azure details (account name, key, container name) are obtained from env variables.
-#    """
-#    for var in ["AZURE_ACCOUNT","AZURE_KEY","AZURE_CONTAINER"]:
-#        if not var in os.environ.keys():
-#            print("{} environment variable not set".format(var))
-#            return False
-#    ### not really optimal to instantiate this service every time we want to upload a file,
-#    ### but overhead shouldn't be noticeable, even if we upload the amplitudes every sample (i.e. every 20s or so).
-#    block_blob_service = BlockBlobService(account_name=os.environ["AZURE_ACCOUNT"],
-#                                          account_key=os.environ["AZURE_KEY"])
-#    # check if the container exists.
-#    if not block_blob_service.exists(os.environ["AZURE_CONTAINER"]):
-#        block_blob_service.create_container(os.environ["AZURE_CONTAINER"])
-#    block_blob_service.create_blob_from_path(os.environ["AZURE_CONTAINER"], blob_name, file_path)
-#    return True
+    return(None)
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Run the iwaves PDE solver")
-    parser.add_argument("--beta_infile",default='./inputs/2018-05-22_beta-samples-array-all-data.h5')
-    parser.add_argument("--a0_infile", default="./inputs/2018-05-22_a0-samples-at-all-times.h5")
+    parser.add_argument("--beta_infile",default='./inputs/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5')
+    parser.add_argument("--a0_infile", default="./inputs/a0_samples_harmonic_a0_all_times.h5")
+    parser.add_argument("--depthfile", default="./data/kdv_bathy_Prelude.csv")
+    parser.add_argument("--infile", default="./data/kdvin_prelude.yml")
     parser.add_argument("--tp_min", help="start of timepoint range",type=int,required=False,default=0)
     parser.add_argument("--tp_max", help="end of timepoint range - if given",
                         type=int,required=False)
     parser.add_argument("--num_tp", help="number of timepoints to process in this job",
                         type=int,required=False)
-    #parser.add_argument("--upload_to_azure", help="upload output to Azure",action='store_true')
-    parser.add_argument("--save_all_amplitudes", help="save all output amplitudes",action='store_true')
     parser.add_argument("--num_samples", help="number of samples per timepoint",type=int,
                         required=False,default=500)
-    #parser.add_argument("--num_process", help="how many processes to run in parallel",
     #                    type=int,default=16)
-    parser.add_argument("--runtime", help="solver run duration [seconds]", default=1.728e5, type=float)
-    parser.add_argument("--output_x", help="x-coordinate for time series output", default=1e5, type=float)
     args = parser.parse_args()
 
-### what timepoints to do:
+    ### what timepoints to do:
     if args.tp_max and args.num_tp:
         raise RuntimeError("Error - only one of tp_max and num_tp should be set")
     tp_min = args.tp_min
@@ -339,10 +318,9 @@ if __name__ == '__main__':
         print("Will execute timepoints {} to {} on core {}".format(tp_min, tp_max, rank))
         print('beta file {}'.format(args.beta_infile))
         print('a0 file {}'.format(args.a0_infile))
-        print('x output {}'.format(args.output_x))
         print(72*'#')
 
-### read in the beta and a0 samples here
+    ### read in the beta and a0 samples here
 
     beta_file = h5py.File(args.beta_infile, 'r')
     beta_samples = np.array(beta_file['beta_samples'])
@@ -350,9 +328,6 @@ if __name__ == '__main__':
     a0_file = h5py.File(args.a0_infile, 'r')
     a0_samples = np.array(a0_file['data/a0-all-times-samples'])
     num_samples = args.num_samples
-    #upload_to_azure = True if args.upload_to_azure else False
-    upload_to_azure = False
-    save_all_amplitudes = True if args.save_all_amplitudes else False
 
     tps = range(tp_min, tp_max)
     numtime = len(tps)
@@ -360,6 +335,6 @@ if __name__ == '__main__':
         tp = tps[ii]
         process_timepoint(tp, a0_samples[tp,:num_samples],
                  beta_samples[:,tp,:num_samples],num_samples,
-                 save_all_amplitudes, upload_to_azure,
-                 args.output_x, args.runtime)
+                 args.infile, args.depthfile
+             )
     
