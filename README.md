@@ -24,7 +24,7 @@ Slightly related is this project
 
  - Build the docker file locally and push the container to dockerhub
 
-    `sudo docker build -t iwaves .`
+    `sudo docker build -t mrayson/iwaves:latest .`
 
  - Test it runs
 
@@ -34,7 +34,7 @@ Slightly related is this project
 
  - Push to docker hub   
     
-    `sudo docker tag iwaves latest`
+    ###`sudo docker tag iwaves latest`
     
     `sudo docker push mrayson/iwaves`
  

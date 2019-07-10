@@ -36,6 +36,7 @@ LABEL maintainer="matt.rayson@uwa.edu.au"
 #     && mv SOLITON/mrayson-iwaves-6ea57f5a55f5 SOLITON/iwaves
 
 # Use pip
+RUN pip install pyyaml
 RUN conda install -y git 
 RUN pip install git+https://bitbucket.org/mrayson/iwaves.git@master
 #
