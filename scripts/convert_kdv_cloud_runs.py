@@ -66,12 +66,21 @@ for df in datafiles:
 # # Data loading tools
 
 def load_h5_step_slim(varname, timepoint):
-    file = get_new_summary_file[timepoint]
-    print(file)
+    try:
+        file = get_new_summary_file[timepoint]
+        print(file)
+    except:
+        print('Cannot find file for step ', timepoint)
+        return np.array([-999])
 
     h5 = h5py.File(file,'r')
     #a0 = da.from_array( h5[varname].value, chunks=-1)
-    a0 = h5[varname].value
+    try:
+        a0 = h5[varname].value
+    except:
+        print('Cannot find variable %s. Returning -999.'%varname)
+        a0 = np.array([-999])
+
     h5.close()
 
     return a0
@@ -84,7 +93,7 @@ def load_h5_step_slim(varname, timepoint):
 
 # Get amax/a0 for all steps
 #nt = 1479
-nt = 373
+nt = 372
 nsamples = 500
 amax_t = np.zeros((nsamples,nt))
 tmax_t = np.zeros((nsamples,nt))
@@ -95,6 +104,9 @@ a0_t = np.zeros((nsamples,nt))
 alpha_t = np.zeros((nsamples,nt))
 cn_t = np.zeros((nsamples,nt))
 beta_t = np.zeros((nt, nsamples,6))
+alpha_mu_t = np.zeros((nsamples,nt))
+cn_mu_t = np.zeros((nsamples,nt))
+
 
 
 # In[14]:
@@ -116,6 +128,19 @@ for ii in range(0,nt):
     c_tmp = load_h5_step_slim('c1', ii+1)
     r10 = load_h5_step_slim('r10', ii+1)
     alpha_tmp = -2*c_tmp*r10
+
+    # Try getting the mean alpha and c variables
+    #try:
+    cmu_tmp = load_h5_step_slim('c1_mu', ii+1)
+    r10_mu = load_h5_step_slim('r10_mu', ii+1)
+    cn_mu_t[0:ns,ii] = cmu_tmp
+    alpha_mu_t[:ns,ii] = -2*cmu_tmp*r10_mu
+
+
+    #except:
+    #    print('No mean variables saved...')
+
+        
 
     #print(a0_tmp.max())
     a0_t[0:ns,ii] = a0_tmp
@@ -183,6 +208,20 @@ alpha_da = xr.DataArray(alpha_t,
     attrs={'long_name':'', 'units':''},
     )
 
+cn_mu_da = xr.DataArray(cn_mu_t,
+    coords=coords2,
+    dims=dims2,
+    attrs={'long_name':'', 'units':''},
+    )
+
+alpha_mu_da = xr.DataArray(alpha_mu_t,
+    coords=coords2,
+    dims=dims2,
+    attrs={'long_name':'', 'units':''},
+    )
+
+
+
 beta_da = xr.DataArray(beta_t,
     coords=coords3,
     dims=dims3,
@@ -194,6 +233,8 @@ dsout = xr.Dataset({'amax':amax_da,\
     'a0':a0_da,\
     'cn':cn_da,\
     'alpha':alpha_da,\
+    'cn_mu':cn_mu_da,\
+    'alpha_mu':alpha_mu_da,\
     'beta':beta_da,\
     'ubed':ubed_da,\
     'usurf':usurf_da})
