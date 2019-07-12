@@ -23,6 +23,18 @@ depthfile = '%s/BATHYMETRY/TimorSea_GA_GEBCO_Combined_DEM.nc'%basedir
 #depthfile = '%s/BATHYMETRY/GEBCO_2014_TimorSea.nc'%basedir
 
 
+### Prelude transect (ending at Prelude)
+x0 = 122.840
+y0 = -13.080
+
+x1 = 123.3506
+y1 = -13.7641
+
+# Prelude point
+xpt = 123.3506
+ypt = -13.7641
+
+
 ### Prelude transect
 #x0 = 122.840
 #y0 = -13.080
@@ -59,41 +71,43 @@ depthfile = '%s/BATHYMETRY/TimorSea_GA_GEBCO_Combined_DEM.nc'%basedir
 #
 #x1 = 116.268
 #y1 = -19.899
-xline = np.array( [115.589, 115.728, 115.819, 116.037, 116.285])
-yline = np.array( [-19.440, -19.303, -19.306, -19.562, -19.895])
-
-xpt = 115.914
-ypt = -19.436
+#xline = np.array( [115.589, 115.728, 115.819, 116.037, 116.285])
+#yline = np.array( [-19.440, -19.303, -19.306, -19.562, -19.895])
+#
+#xpt = 115.914
+#ypt = -19.436
 
 
 dx = 250/1e5 # topo spacing (degrees)
 # KdV parameters
-dz = 5.0
-dxkdv = 50.
-spongedist=2e4
+#dxkdv = 50.
+#spongedist=2e4
+dxkdv = 5000.
+spongedist=0
 
-outfile_h = 'data/kdv_bathy_PILIMOS_curved.csv'
+
+outfile_h = 'data/kdv_bathy_Prelude_coarse_5km.csv'
 #######
 
 ## Generate x and y slice coordinates
-#lon = np.arange(x0, x1, dx)
-#Fx = interp1d([x0,x1],[y0,y1])
-#lat = Fx(lon)
+lon = np.arange(x0, x1, dx)
+Fx = interp1d([x0,x1],[y0,y1])
+lat = Fx(lon)
 
-mydist = np.zeros_like(xline)
-mydist[1:] = np.cumsum(np.abs( (xline[1:]-xline[0:-1]) + 1j*(yline[1:]-yline[0:-1])))
-outdist = np.linspace(mydist[0],mydist[-1])
-
-kind = 'quadratic'
-Fx = interp1d(mydist,xline,kind=kind)
-lon = Fx(outdist)
-Fy = interp1d(mydist,yline,kind=kind)
-lat = Fy(outdist)
-
-plt.figure()
-plt.plot(lon,lat,'.')
-plt.plot(xline,yline,'ro')
-plt.show()
+#mydist = np.zeros_like(xline)
+#mydist[1:] = np.cumsum(np.abs( (xline[1:]-xline[0:-1]) + 1j*(yline[1:]-yline[0:-1])))
+#outdist = np.linspace(mydist[0],mydist[-1])
+#
+#kind = 'quadratic'
+#Fx = interp1d(mydist,xline,kind=kind)
+#lon = Fx(outdist)
+#Fy = interp1d(mydist,yline,kind=kind)
+#lat = Fy(outdist)
+#
+#plt.figure()
+#plt.plot(lon,lat,'.')
+#plt.plot(xline,yline,'ro')
+#plt.show()
 
 
 # Compute the distance coordinate
