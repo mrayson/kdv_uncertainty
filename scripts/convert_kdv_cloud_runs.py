@@ -74,12 +74,13 @@ def load_h5_step_slim(varname, timepoint):
         return np.array([-999])
 
     h5 = h5py.File(file,'r')
-    #a0 = da.from_array( h5[varname].value, chunks=-1)
-    try:
-        a0 = h5[varname].value
-    except:
+
+    if varname not in list(h5.keys()):
         print('Cannot find variable %s. Returning -999.'%varname)
         a0 = np.array([-999])
+    else:
+        a0 = h5[varname].value
+
 
     h5.close()
 
@@ -102,9 +103,11 @@ usurf_max_t = np.zeros((nsamples,nt))
 
 a0_t = np.zeros((nsamples,nt))
 alpha_t = np.zeros((nsamples,nt))
+alpha2_t = np.zeros((nsamples,nt))
 cn_t = np.zeros((nsamples,nt))
 beta_t = np.zeros((nt, nsamples,6))
 alpha_mu_t = np.zeros((nsamples,nt))
+alpha2_mu_t = np.zeros((nsamples,nt))
 cn_mu_t = np.zeros((nsamples,nt))
 
 
@@ -129,12 +132,18 @@ for ii in range(0,nt):
     r10 = load_h5_step_slim('r10', ii+1)
     alpha_tmp = -2*c_tmp*r10
 
+    r20 = load_h5_step_slim('r20', ii+1)
+    alpha2_tmp = -3*r20*c_tmp*c_tmp
+
     # Try getting the mean alpha and c variables
     #try:
     cmu_tmp = load_h5_step_slim('c1_mu', ii+1)
     r10_mu = load_h5_step_slim('r10_mu', ii+1)
     cn_mu_t[0:ns,ii] = cmu_tmp
     alpha_mu_t[:ns,ii] = -2*cmu_tmp*r10_mu
+
+    r20_mu = load_h5_step_slim('r20_mu', ii+1)
+    alpha2_mu_t[:ns,ii] = -3*cmu_tmp*cmu_tmp*r20_mu
 
 
     #except:
@@ -149,6 +158,7 @@ for ii in range(0,nt):
     ubed_max_t[0:ns,ii] = ubed_tmp
     usurf_max_t[0:ns,ii] = usurf_tmp
     alpha_t[0:ns,ii] = alpha_tmp
+    alpha2_t[0:ns,ii] = alpha2_tmp
     cn_t[0:ns,ii] = c_tmp
 
     beta_t[ii,0:ns,:] = beta_tmp.T
@@ -208,6 +218,14 @@ alpha_da = xr.DataArray(alpha_t,
     attrs={'long_name':'', 'units':''},
     )
 
+alpha2_da = xr.DataArray(alpha2_t,
+    coords=coords2,
+    dims=dims2,
+    attrs={'long_name':'', 'units':''},
+    )
+
+
+
 cn_mu_da = xr.DataArray(cn_mu_t,
     coords=coords2,
     dims=dims2,
@@ -219,6 +237,14 @@ alpha_mu_da = xr.DataArray(alpha_mu_t,
     dims=dims2,
     attrs={'long_name':'', 'units':''},
     )
+
+alpha2_mu_da = xr.DataArray(alpha2_mu_t,
+    coords=coords2,
+    dims=dims2,
+    attrs={'long_name':'', 'units':''},
+    )
+
+
 
 
 
@@ -233,8 +259,11 @@ dsout = xr.Dataset({'amax':amax_da,\
     'a0':a0_da,\
     'cn':cn_da,\
     'alpha':alpha_da,\
+    'alpha2':alpha2_da,\
+    'cn_mu':cn_mu_da,\
     'cn_mu':cn_mu_da,\
     'alpha_mu':alpha_mu_da,\
+    'alpha2_mu':alpha2_mu_da,\
     'beta':beta_da,\
     'ubed':ubed_da,\
     'usurf':usurf_da})

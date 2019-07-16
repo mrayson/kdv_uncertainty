@@ -233,6 +233,8 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     all_r01 = []
     all_c1_mu = []
     all_r10_mu = []
+    all_r20 = []
+    all_r20_mu = []
     max_amplitudes = []
     max_u_surface_all = []
     max_u_seabed_all = []
@@ -262,6 +264,9 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         all_r01.append(mykdv.r01[xpt])
         all_tmax.append(tmax)
 
+        if mykdv.ekdv:
+            all_r20.append(mykdv.r20[xpt])
+
         # Calculate mean quantities\n",
         dx = mykdv.x[1]-mykdv.x[0]
         nx = mykdv.x.shape[0]
@@ -270,6 +275,9 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         r10_mu_t = np.cumsum(mykdv.r10*dx) / L
         all_c1_mu.append(c_mu_t[xpt])
         all_r10_mu.append(r10_mu_t[xpt])
+        if mykdv.ekdv:
+            r20_mu_t = np.cumsum(mykdv.r20*dx) / L
+            all_r20_mu.append(r20_mu_t[xpt])
 
 
     slim_outfile.create_dataset("max_amplitude",data=np.array(max_amplitudes))
@@ -281,6 +289,9 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     slim_outfile.create_dataset("r10_mu",data=np.array(all_r10_mu))
     slim_outfile.create_dataset("r01",data=np.array(all_r01))
     slim_outfile.create_dataset("tmax",data=np.array(all_tmax))
+    if mykdv.ekdv:
+        slim_outfile.create_dataset("r20_mu",data=np.array(all_r20_mu))
+        slim_outfile.create_dataset("r20",data=np.array(all_r20))
     slim_outfile.close()
 
     return(None)
