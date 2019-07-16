@@ -79,6 +79,7 @@ def calc_nliw_params(h5file, depthtxt, dz, mode=0, samples=None):
 
 
     rand_loc = np.random.randint(0, ntrace, samples)
+    beta_out = np.zeros((nparams, nt, samples))
 
     for tstep in  tqdm(range(0,nt)):
         #if (tstep%20==0):
@@ -99,6 +100,8 @@ def calc_nliw_params(h5file, depthtxt, dz, mode=0, samples=None):
                     rhotmp = double_tanh(data[:,tstep, rand_loc[ii]], zout/z_std)
                 elif nparams == 7:
                     rhotmp = double_tanh_7(data[:,tstep, rand_loc[ii]], zout/z_std)
+
+                beta_out[:,tstep, ii] = data[:,tstep, rand_loc[ii]]
 
                 # Need to scale rho
 
@@ -171,7 +174,7 @@ def calc_nliw_params(h5file, depthtxt, dz, mode=0, samples=None):
 
 
 
-    beta_da = xr.DataArray(data,
+    beta_da = xr.DataArray(beta_out,
         coords=coords3,
         dims=dims3,
         attrs={'long_name':'', 'units':''},
