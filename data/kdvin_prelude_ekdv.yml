@@ -20,4 +20,5 @@ kdvargs:
     nonhydrostatic: True # Include dispersion term in KdV equation
     ekdv: True # Cubic nonlinearity
     spongedist: 20000. # Right hand sponge distance [m]
+    verbose: False # Print stuff
 
