@@ -212,7 +212,7 @@ def run_solver(a0_sample, beta_sample, infile, depthfile,):
 
 
 def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
-                     infile, depthfile ):
+                     infile, depthfile, outpath):
     """
     Process a single timepoint, doing num_samples samples.
     Save the output in an h5 file along with the input a0 and beta for this timepoint.
@@ -220,7 +220,7 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     If 'upload' is True, upload all outputs to cloud storage, using Azure credentials from env variables.
     """
     timestamp = strftime("%Y-%m-%d--%H-%M-%S", gmtime())
-    slim_output_dir = os.path.join(SOLITON_HOME, "output","slim")
+    slim_output_dir = os.path.join(SOLITON_HOME, "output",outpath)
     slim_outfile_name = os.path.join(slim_output_dir,\
         "{}_timepoint-{}_output.h5".format(timestamp,timepoint))
     slim_outfile = h5py.File(slim_outfile_name,"w")
@@ -304,6 +304,7 @@ if __name__ == '__main__':
     parser.add_argument("--a0_infile", default="./inputs/a0_samples_harmonic_a0_all_times.h5")
     parser.add_argument("--depthfile", default="./data/kdv_bathy_Prelude.csv")
     parser.add_argument("--infile", default="./data/kdvin_prelude.yml")
+    parser.add_argument("--outpath", default="slim")
     parser.add_argument("--tp_min", help="start of timepoint range",type=int,required=False,default=0)
     parser.add_argument("--tp_max", help="end of timepoint range - if given",
                         type=int,required=False)
@@ -331,6 +332,11 @@ if __name__ == '__main__':
         print('a0 file {}'.format(args.a0_infile))
         print(72*'#')
 
+        slim_output_dir = os.path.join(SOLITON_HOME, "output", args.outpath)
+        os.mkdir(slim_output_dir)
+
+    comm.barrier()
+
     ### read in the beta and a0 samples here
 
     beta_file = h5py.File(args.beta_infile, 'r')
@@ -346,6 +352,6 @@ if __name__ == '__main__':
         tp = tps[ii]
         process_timepoint(tp, a0_samples[tp,:num_samples],
                  beta_samples[:,tp,:num_samples],num_samples,
-                 args.infile, args.depthfile
+                 args.infile, args.depthfile, args.outpath,
              )
     

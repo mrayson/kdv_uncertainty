@@ -20,13 +20,20 @@ import os
 import sys
 from time import gmtime, strftime, time
 
+################
+# Inputs
+outpath = "slim-vi-lag"
+nt = 374
+nsamples = 500
+################
+
 if "PYTHON_HOME" in os.environ.keys():
     PYTHON_HOME = os.environ["PYTHON_HOME"]
 else:
     PYTHON_HOME = "."
 sys.path.append(PYTHON_HOME)
 
-slim_output_dir = os.path.join(PYTHON_HOME, "output","slim")
+slim_output_dir = os.path.join(PYTHON_HOME, "output", outpath)
 slimfiles = os.path.join(slim_output_dir,'*.h5')
 print(slimfiles)
 
@@ -94,8 +101,6 @@ def load_h5_step_slim(varname, timepoint):
 
 # Get amax/a0 for all steps
 #nt = 1479
-nt = 372
-nsamples = 500
 amax_t = np.zeros((nsamples,nt))
 tmax_t = np.zeros((nsamples,nt))
 ubed_max_t = np.zeros((nsamples,nt))
