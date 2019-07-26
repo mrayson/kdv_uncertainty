@@ -19,20 +19,21 @@ from soda.utils.myproj import MyProj
 basedir = '/home/suntans/Share/ScottReef/DATA'
 #depthfile = '%s/BATHYMETRY/ETOPO1/ETOPO1_Bed_TimorSea.nc'%basedir
 #depthfile = '%s/BATHYMETRY/OTPS_Grid_Ind2016.nc'%basedir
-depthfile = '%s/BATHYMETRY/TimorSea_GA_GEBCO_Combined_DEM.nc'%basedir
+#depthfile = '%s/BATHYMETRY/TimorSea_GA_GEBCO_Combined_DEM.nc'%basedir
+depthfile = '%s/BATHYMETRY/TimorSea_GAWEL_Multi_GEBCO_Combined_DEM.nc'%basedir
 #depthfile = '%s/BATHYMETRY/GEBCO_2014_TimorSea.nc'%basedir
 
 
-### Prelude transect (ending at Prelude)
-x0 = 122.840
-y0 = -13.080
-
-x1 = 123.3506
-y1 = -13.7641
-
-# Prelude point
-xpt = 123.3506
-ypt = -13.7641
+#### Prelude transect (ending at Prelude)
+#x0 = 122.840
+#y0 = -13.080
+#
+#x1 = 123.3506
+#y1 = -13.7641
+#
+## Prelude point
+#xpt = 123.3506
+#ypt = -13.7641
 
 
 ### Prelude transect
@@ -42,9 +43,17 @@ ypt = -13.7641
 #x1 = 123.519
 #y1 = -14.002
 #
-## Prelude point
-#xpt = 123.3506
-#ypt = -13.7641
+
+## WEL Bathy Prelude transect
+x0 = 122.753
+y0 = -13.1026
+
+x1 = 123.486
+y1 = -13.947
+
+# Prelude point
+xpt = 123.3506
+ypt = -13.7641
 
 ### Rowley
 #x0 = 119.005
@@ -80,13 +89,14 @@ ypt = -13.7641
 
 dx = 250/1e5 # topo spacing (degrees)
 # KdV parameters
-#dxkdv = 50.
-#spongedist=2e4
-dxkdv = 5000.
-spongedist=0
+dxkdv = 50.
+spongedist=2e4
+#dxkdv = 5000.
+#spongedist=0
 
 
-outfile_h = 'data/kdv_bathy_Prelude_coarse_5km.csv'
+#outfile_h = 'data/kdv_bathy_Prelude_coarse_5km.csv'
+outfile_h = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
 #######
 
 ## Generate x and y slice coordinates
