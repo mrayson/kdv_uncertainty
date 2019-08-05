@@ -206,10 +206,12 @@ h5files =[
     #'%s/ShellCrux_Filtered_Density_BHM_VI_20162017.h5'%datadir,
     #'%s/ShellCrux_Filtered_Density_BHM_VI_Jul2016.h5'%datadir,
     #'%s/ShellCrux_Uniltered_Density_BHM_MCMC_20162017.h5'%datadir,
-    '%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
+    #'%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
+    '%s/ShellFBlock_Unfiltered_Density_BHM_VI_20072009.h5'%datadir,
     ]
 
-depthfile = 'data/kdv_bathy_Prelude_coarse_5km.csv'
+#depthfile = 'data/kdv_bathy_Prelude_coarse_5km.csv'
+depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy_5km.csv'
 
 depthtxt = np.loadtxt(depthfile, delimiter=',')
 

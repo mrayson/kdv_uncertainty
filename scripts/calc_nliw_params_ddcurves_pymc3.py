@@ -164,7 +164,8 @@ h5files =[
     #'%s/ShellCrux_Filtered_Density_BHM_VI_20162017.h5'%datadir,
     #'%s/ShellCrux_Filtered_Density_BHM_VI_Jul2016.h5'%datadir,
     #'%s/ShellCrux_Uniltered_Density_BHM_MCMC_20162017.h5'%datadir,
-    '%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
+    #'%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
+    '%s/ShellFBlock_Unfiltered_Density_BHM_VI_20072009.h5'%datadir,
     ]
 
 
