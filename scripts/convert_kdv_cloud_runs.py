@@ -16,13 +16,22 @@ import xarray as xr
 from iwaves.utils import isw
 import matplotlib.pyplot as plt
 
+import dask
 import os 
 import sys
 from time import gmtime, strftime, time
 
+# Test manually setting the scheduler
+dask.config.set(scheduler='processes')
+
+
 ################
 # Inputs
-outpath = "slim-vi-lag"
+#outpath = "slim-vi-lag-welbathy"
+#outpath = 'slim-a0_optimal_GP'
+#outpath = 'slim-a0_harmonic_GP'
+#outpath = 'slim-harmonic_beta_a0'
+outpath = 'slim-harmonic_beta_pred_a0'
 nt = 374
 nsamples = 500
 ################
@@ -38,7 +47,7 @@ slimfiles = os.path.join(slim_output_dir,'*.h5')
 print(slimfiles)
 
 timestamp = strftime("%Y-%m-%d--%H-%M-%S", gmtime())
-outfile = os.path.join(PYTHON_HOME,'output','{}_magnus_kdv_runs.nc'.format(timestamp))
+outfile = os.path.join(PYTHON_HOME,'output','{}_{}_magnus_kdv_runs.nc'.format(timestamp,outpath))
 
 
  

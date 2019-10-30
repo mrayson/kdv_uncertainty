@@ -113,7 +113,8 @@ def calc_u_velocity_1d(kdv, A, idx):
 
 
 
-def run_solver(a0_sample, beta_sample, infile, depthfile,):
+def run_solver(a0_sample, beta_sample, infile, depthfile,\
+        rho_std,rho_mu,z_std):
     """
     instantiate an run the actual PDE solver, returning the full list of output amplitudes, plus the (signed)
     maximum amplitude.
@@ -146,9 +147,9 @@ def run_solver(a0_sample, beta_sample, infile, depthfile,):
 
     #x_domain = np.arange(0,L_d+dx, dx)
     #    print("running kdv solver for a0 {}".format(a0_sample))
-    rho_std = 1.5
-    rho_mu = 1024.
-    z_std = 100.
+    #rho_std = 1.5
+    #rho_mu = 1024.
+    #z_std = 100.
     #z_new = np.arange(0, zmax,-dz)
     dz = 5
     z_new = np.arange(-depthtxt[0,1],dz,dz)[::-1]
@@ -175,8 +176,16 @@ def run_solver(a0_sample, beta_sample, infile, depthfile,):
     depthtxt = np.loadtxt(depthfile, delimiter=',')
 
     # Initialise the KdV class
-    mykdv = vKdV(rho_sample, z_new, depthtxt[:,1], \
-        x=depthtxt[:,0], **kdvargs)
+    try:
+        mykdv = vKdV(rho_sample, z_new, depthtxt[:,1], \
+            x=depthtxt[:,0], **kdvargs)
+    except:
+        print('Failed to init vKdV on core: ', rank)
+        print('rho samples: ', rho_sample[0], rho_sample[-1], z_new[0],z_new[-1])
+        print('betas: ', beta_sample)
+        return -999, -1, -1, -1, -1, -1, -1
+
+
 
     ## Run the model
     nsteps = int(runtime // kdvargs['dt'])
@@ -212,7 +221,9 @@ def run_solver(a0_sample, beta_sample, infile, depthfile,):
 
 
 def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
-                     infile, depthfile, outpath):
+                     infile, depthfile, outpath,
+                     rho_std, rho_mu, z_std,
+                     ):
     """
     Process a single timepoint, doing num_samples samples.
     Save the output in an h5 file along with the input a0 and beta for this timepoint.
@@ -247,7 +258,8 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         beta_sample = beta_samples[:, sample]
         tic = time()
         max_amplitude, amplitudes, max_u_surface, max_u_seabed, tmax, mykdv, xpt =\
-            run_solver(a0_sample, beta_sample, infile, depthfile )
+            run_solver(a0_sample, beta_sample, infile, depthfile,\
+                rho_std, rho_mu, z_std)
         toc = time()
 
         if rank == 0:
@@ -259,25 +271,39 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
         max_u_surface_all.append(max_u_surface)
         max_u_seabed_all.append(max_u_seabed)
         all_amplitudes.append(amplitudes)
-        all_c1.append(mykdv.c1[xpt])
-        all_r10.append(mykdv.r10[xpt])
-        all_r01.append(mykdv.r01[xpt])
-        all_tmax.append(tmax)
 
-        if mykdv.ekdv:
-            all_r20.append(mykdv.r20[xpt])
+        if max_amplitude != -999:
+            all_c1.append(mykdv.c1[xpt])
+            all_r10.append(mykdv.r10[xpt])
+            all_r01.append(mykdv.r01[xpt])
+            all_tmax.append(tmax)
 
-        # Calculate mean quantities\n",
-        dx = mykdv.x[1]-mykdv.x[0]
-        nx = mykdv.x.shape[0]
-        L = np.arange(1,nx+1,1)*dx
-        c_mu_t = np.cumsum(mykdv.c1*dx) / L
-        r10_mu_t = np.cumsum(mykdv.r10*dx) / L
-        all_c1_mu.append(c_mu_t[xpt])
-        all_r10_mu.append(r10_mu_t[xpt])
-        if mykdv.ekdv:
-            r20_mu_t = np.cumsum(mykdv.r20*dx) / L
-            all_r20_mu.append(r20_mu_t[xpt])
+            if mykdv.ekdv:
+                all_r20.append(mykdv.r20[xpt])
+
+            # Calculate mean quantities\n",
+            dx = mykdv.x[1]-mykdv.x[0]
+            nx = mykdv.x.shape[0]
+            L = np.arange(1,nx+1,1)*dx
+            c_mu_t = np.cumsum(mykdv.c1*dx) / L
+            r10_mu_t = np.cumsum(mykdv.r10*dx) / L
+            all_c1_mu.append(c_mu_t[xpt])
+            all_r10_mu.append(r10_mu_t[xpt])
+            if mykdv.ekdv:
+                r20_mu_t = np.cumsum(mykdv.r20*dx) / L
+                all_r20_mu.append(r20_mu_t[xpt])
+        else:
+            # Run failed
+            all_c1.append(-999)
+            all_r10.append(-999)
+            all_r01.append(-999)
+            all_tmax.append(-999)
+            all_c1_mu.append(-999)
+            all_r10_mu.append(-999)
+            if mykdv.ekdv:
+                all_r20.append(-999)
+
+
 
 
     slim_outfile.create_dataset("max_amplitude",data=np.array(max_amplitudes))
@@ -341,6 +367,12 @@ if __name__ == '__main__':
 
     beta_file = h5py.File(args.beta_infile, 'r')
     beta_samples = np.array(beta_file['beta_samples'])
+    z_std = np.array(beta_file['data/z_std'])
+    rho_std = np.array(beta_file['data/rho_std'])
+    rho_mu = np.array(beta_file['data/rho_mu'])
+
+    if rank == 0:
+        print('rho_mu {}, rho_std: {}, z_std: {}'.format(rho_mu,rho_std,z_std))
 
     a0_file = h5py.File(args.a0_infile, 'r')
     a0_samples = np.array(a0_file['data/a0-all-times-samples'])
@@ -353,5 +385,6 @@ if __name__ == '__main__':
         process_timepoint(tp, a0_samples[tp,:num_samples],
                  beta_samples[:,tp,:num_samples],num_samples,
                  args.infile, args.depthfile, args.outpath,
+                 rho_std, rho_mu, z_std,
              )
     

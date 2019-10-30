@@ -101,7 +101,7 @@ def calc_u_velocity(kdv, A):
 
 
 
-def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
+def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5, rho_std=1.5,rho_mu=1024,z_std=100.):
     """
     instantiate an run the actual PDE solver, returning the full list of output amplitudes, plus the (signed)
     maximum amplitude.
@@ -109,9 +109,9 @@ def run_solver(a0_sample, beta_sample, output_x=1e5, runtime=1.728e5):
 #    print("running kdv solver for a0 {}".format(a0_sample))
     dz = 2.5
     zmax = -252.5
-    rho_std = 1.5
-    rho_mu = 1024.
-    z_std = 100.
+    #rho_std = 1.5
+    #rho_mu = 1024.
+    #z_std = 100.
     #z_new = np.linspace(zmax, 0, num = int(abs(zmax/dz)))
     z_new = np.arange(0, zmax,-dz)
 #    print("p0 for a0 {}".format(a0_sample))

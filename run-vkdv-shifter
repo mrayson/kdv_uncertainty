@@ -23,12 +23,14 @@ export CODE_DIR=$MYGROUP/KDV
 srun -u --export=all \
     shifter run --mpi mrayson/iwaves \
     python -u scripts/run_vkdv_solver_mpi.py \
-        --beta_infile $CODE_DIR/inputs/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5 \
-        --a0_infile $CODE_DIR/inputs/a0_samples_harmonic_a0_variable_lag_2019-07-18.h5 \
+        --beta_infile $CODE_DIR/inputs/$3 \
         --infile ./data/kdvin_prelude.yml \
         --depthfile ./data/kdv_bathy_Prelude_WELGA_bathy.csv \
-        --outpath slim-vi-lag-welbathy \
         --num_samples 500 \
         --tp_min 1\
-        --tp_max 375
+        --tp_max 375 \
+        --a0_infile $CODE_DIR/inputs/$1 \
+        --outpath $2
+        #--a0_infile $CODE_DIR/inputs/a0_samples_harmonic_a0_variable_lag_2019-07-18.h5 \
+        #--outpath slim-vi-lag-welbathy \
 
