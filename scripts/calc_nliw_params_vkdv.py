@@ -26,15 +26,15 @@ import pdb
 
 def load_density_h5(h5file):
     f = h5py.File(h5file,'r')
-    rho = f['data/rho'][:]
-    depth = f['data/z'][:]
+    #rho = f['data/rho'][:]
+    #depth = f['data/z'][:]
     data = f['beta_samples'][:]
     time = f['data/time'][:].astype('<M8[ns]')
     rho_std = f['data/rho_std'].value
     rho_mu = f['data/rho_mu'].value
     z_std = f['data/z_std'].value
     f.close()
-    return data,time, rho, depth, rho_std, z_std, rho_mu
+    return data,time, rho_std, z_std, rho_mu
 
 def single_tanh(beta, z):
     
@@ -57,7 +57,8 @@ def double_tanh_7(beta, z):
 def calc_nliw_params(h5file, depthtxt, dz, mode=0, samples=None):
     
     # Lload the data
-    data,time, rho, depth, rho_std, z_std, rho_mu = load_density_h5(h5file)
+    #data,time, rho, depth, rho_std, z_std, rho_mu = load_density_h5(h5file)
+    data,time, rho_std, z_std, rho_mu = load_density_h5(h5file)
     nparams, nt, ntrace = data[:].shape
     
     
@@ -207,7 +208,9 @@ h5files =[
     #'%s/ShellCrux_Filtered_Density_BHM_VI_Jul2016.h5'%datadir,
     #'%s/ShellCrux_Uniltered_Density_BHM_MCMC_20162017.h5'%datadir,
     #'%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
-    '%s/ShellFBlock_Unfiltered_Density_BHM_VI_20072009.h5'%datadir,
+    #'%s/ShellFBlock_Unfiltered_Density_BHM_VI_20072009.h5'%datadir,
+    '%s/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction.h5'%datadir,
+    '%s/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017.h5'%datadir,
     ]
 
 #depthfile = 'data/kdv_bathy_Prelude_coarse_5km.csv'
