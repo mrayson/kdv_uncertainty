@@ -270,6 +270,14 @@ def optimize_kdv(csvfile, depthfile, infile, outfilestr, overwrite=True):
 #outfilestr = 'data/ekdv_optimal_a0_Prelude'
 #optimize_kdv(csvfile, depthfile, infile, outfilestr)
 
+# Prelude new bathy input
+csvfile = 'data/vkdv_inputs_prelude_short.csv'
+depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
+infile = 'data/kdvin_prelude_kdv.yml'
+outfilestr = 'data/kdv_optimal_a0_Prelude_NewBathy'
+optimize_kdv(csvfile, depthfile, infile, outfilestr)
+
+
 # IMOS PIL transect
 #csvfile = 'data/vkdv_inputs_mode2_imospil200.csv'
 #depthfile = 'data/kdv_bathy_PILIMOS_curved.csv'
@@ -278,12 +286,12 @@ def optimize_kdv(csvfile, depthfile, infile, outfilestr, overwrite=True):
 #overwrite=True
 #optimize_kdv(csvfile, depthfile, infile, outfilestr, overwrite=overwrite)
 
-csvfile = 'data/vkdv_inputs_mode2_imospil200.csv'
-depthfile = 'data/kdv_bathy_PILIMOS_curved.csv'
-infile = 'data/kdvin_imospil_mode2_kdv.yml'
-outfilestr = 'data/kdv_mode2_optimal_a0_PILIMOS'
-overwrite=True
-optimize_kdv(csvfile, depthfile, infile, outfilestr, overwrite=overwrite)
+#csvfile = 'data/vkdv_inputs_mode2_imospil200.csv'
+#depthfile = 'data/kdv_bathy_PILIMOS_curved.csv'
+#infile = 'data/kdvin_imospil_mode2_kdv.yml'
+#outfilestr = 'data/kdv_mode2_optimal_a0_PILIMOS'
+#overwrite=True
+#optimize_kdv(csvfile, depthfile, infile, outfilestr, overwrite=overwrite)
 
 
 

@@ -48,8 +48,10 @@ depthfile = '%s/BATHYMETRY/TimorSea_GAWEL_Multi_GEBCO_Combined_DEM.nc'%basedir
 x0 = 122.753
 y0 = -13.1026
 
-x1 = 123.486
-y1 = -13.947
+#x1 = 123.486
+#y1 = -13.947
+x1 = 123.3506
+y1 = -13.7641
 
 # Prelude point
 xpt = 123.3506
@@ -89,14 +91,15 @@ ypt = -13.7641
 
 dx = 250/1e5 # topo spacing (degrees)
 # KdV parameters
-dxkdv = 50.
-spongedist=2e4
-#dxkdv = 5000.
-#spongedist=0
+#dxkdv = 50.
+#spongedist=2e4
+dxkdv = 5000.
+spongedist=0
 
 
 #outfile_h = 'data/kdv_bathy_Prelude_coarse_5km.csv'
-outfile_h = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
+#outfile_h = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
+outfile_h = 'data/kdv_bathy_Prelude_WELGA_bathy_5km.csv'
 #######
 
 ## Generate x and y slice coordinates
