@@ -108,6 +108,10 @@ def calc_nliw_params(h5file, depthtxt, dz, mode=0, samples=None):
 
                 rhotmp = rhotmp*rho_std + rho_mu
 
+                #if np.any(np.diff(rhotmp)<0):
+                #    pdb.set_trace()
+
+
                 N2 = -9.81/1000*np.gradient(rhotmp,-dz)
 
                 phi,cn = isw.iwave_modes(N2, dz)
@@ -210,7 +214,7 @@ h5files =[
     #'%s/ShellCrux_Uniltered_Density_BHM_VI_20162017.h5'%datadir,
     #'%s/ShellFBlock_Unfiltered_Density_BHM_VI_20072009.h5'%datadir,
     '%s/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction.h5'%datadir,
-    '%s/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017.h5'%datadir,
+    #'%s/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017.h5'%datadir,
     ]
 
 #depthfile = 'data/kdv_bathy_Prelude_coarse_5km.csv'
