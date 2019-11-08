@@ -188,16 +188,24 @@ def run_solver(a0_sample, beta_sample, infile, depthfile,\
 
 
     ## Run the model
-    nsteps = int(runtime // kdvargs['dt'])
-    nn=0
-    output_amplitude = []
-    for ii in range(nsteps):
-        if mykdv.solve_step(bc_left=bcfunc(mykdv.t)) != 0:
-            print( 'Blowing up at step: %d'%ii)
-            break
-        
-        # Evalute the function
-        output_amplitude.append(amp_at_x(mykdv))
+    try:
+        nsteps = int(runtime // kdvargs['dt'])
+        nn=0
+        output_amplitude = []
+        for ii in range(nsteps):
+            if mykdv.solve_step(bc_left=bcfunc(mykdv.t)) != 0:
+                print( 'Blowing up at step: %d'%ii)
+                break
+            
+            # Evalute the function
+            output_amplitude.append(amp_at_x(mykdv))
+    except:
+        print('Model crashed!!')
+        print('rho samples: ', rho_sample[0], rho_sample[-1], z_new[0],z_new[-1])
+        print('betas: ', beta_sample)
+        return -999, -1, -1, -1, -1, -1, -1
+
+
 
 
     output = np.array( [[aa[0], aa[1], aa[2]] for aa in output_amplitude])
@@ -300,11 +308,6 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
             all_tmax.append(-999)
             all_c1_mu.append(-999)
             all_r10_mu.append(-999)
-            if mykdv.ekdv:
-                all_r20.append(-999)
-
-
-
 
     slim_outfile.create_dataset("max_amplitude",data=np.array(max_amplitudes))
     slim_outfile.create_dataset("max_u_surface",data=np.array(max_u_surface_all))
@@ -315,9 +318,11 @@ def process_timepoint(timepoint, a0_samples, beta_samples, num_samples,
     slim_outfile.create_dataset("r10_mu",data=np.array(all_r10_mu))
     slim_outfile.create_dataset("r01",data=np.array(all_r01))
     slim_outfile.create_dataset("tmax",data=np.array(all_tmax))
-    if mykdv.ekdv:
-        slim_outfile.create_dataset("r20_mu",data=np.array(all_r20_mu))
-        slim_outfile.create_dataset("r20",data=np.array(all_r20))
+    
+    if mykdv != -1:
+        if mykdv.ekdv:
+            slim_outfile.create_dataset("r20_mu",data=np.array(all_r20_mu))
+            slim_outfile.create_dataset("r20",data=np.array(all_r20))
     slim_outfile.close()
 
     return(None)
