@@ -28,7 +28,7 @@ srun -u --export=all \
         --depthfile ./data/kdv_bathy_Prelude_WELGA_bathy.csv \
         --num_samples 500 \
         --tp_min 1\
-        --tp_max 375 \
+        --tp_max $4 \
         --a0_infile $CODE_DIR/inputs/$1 \
         --outpath $2
         #--a0_infile $CODE_DIR/inputs/a0_samples_harmonic_a0_variable_lag_2019-07-18.h5 \
