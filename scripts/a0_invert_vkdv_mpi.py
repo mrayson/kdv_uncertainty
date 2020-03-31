@@ -391,8 +391,9 @@ def invert_kdv(ds, depthfile, infile, t1, t2, mode, outpath, sitemname, basetime
 
 if __name__=='__main__':
     #ncfile = '/home/suntans/Share/ARCHub/DATA/FIELD/ShellCrux/KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'
-    ncpath = r'C:\Users\mrayson\cloudstor\Data\Crux'
-    ncfile = '{}\KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'.format(ncpath)
+    #ncpath = r'C:\Users\mrayson\cloudstor\Data\Crux'
+    ncpath = '/home/mrayson/group/mrayson/DATA/FIELD/Crux'
+    ncfile = '{}/KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'.format(ncpath)
     depthfile = 'data/kdv_bathy_Prelude.csv'
     infile = 'data/kdvin.yml'
 
