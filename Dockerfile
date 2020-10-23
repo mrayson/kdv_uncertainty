@@ -39,6 +39,7 @@ LABEL maintainer="matt.rayson@uwa.edu.au"
 RUN pip install pyyaml
 RUN conda install -y git 
 RUN pip install git+https://bitbucket.org/mrayson/iwaves.git@master
+RUN pip install git+https://github.com/mrayson/soda.git@python3pip
 #
 # input a0 and beta files need to be in this directory (or a subdir)
 # in order to copy them to docker image

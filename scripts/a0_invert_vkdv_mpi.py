@@ -28,6 +28,22 @@ import matplotlib as mpl
 
 import yaml
 
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+size = comm.Get_size()
+rank = comm.Get_rank()
+
+if rank == 0:
+    print('MPI running: rank = %d, ncores = %d'%(rank,size))
+    verbose=True
+else:
+    verbose=False
+
+
+
+
+
 ###############
 # KdV functions
 ###############
@@ -291,7 +307,8 @@ def fdiff(a0, frq, t0, runtime,  At, mykdv, infile,iter):
     err = np.linalg.norm(At.y - Amod)
     
     iter+=1
-    print(iter, a0, err)
+    if verbose:
+        print(iter, a0, err)
     
     # Return the L2-norm of the error vector
     return err
@@ -302,8 +319,9 @@ def print_result(xk):
 
 def invert_kdv(ds, depthfile, infile, t1, t2, mode, outpath, sitemname, basetime):
     
-    print(72*'#')
-    print('Running inversion for {} to {}...'.format(t1,t2))
+    if verbose:
+        print(72*'#')
+        print('Running inversion for {} to {}...'.format(t1,t2))
 
     # Extract the initial condition data and build the vKdV class
     print('\tCreating initial conditions...')
@@ -344,7 +362,9 @@ def invert_kdv(ds, depthfile, infile, t1, t2, mode, outpath, sitemname, basetime
     #soln['x'], a0, frq, At, Amod, t0, runtime, density_params, twave, ampfac, t1,t2,basetime
 
     h5file = '{}/vkdv_params_{}_{}.h5'.format(outpath,sitename,t1[0:10])
-    print('Wrote inputs to: ', h5file)
+    if verbose:
+        print('Wrote inputs to: ', h5file)
+
     with h5py.File(h5file, "w") as f:
         f['a0_init'] = a0
         f['a0_opt'] = soln['x']
@@ -365,13 +385,15 @@ def invert_kdv(ds, depthfile, infile, t1, t2, mode, outpath, sitemname, basetime
     #ncfile = '{}/vkdv_soln_{}_{}.nc'.format(outpath,sitename,t1[0:10])
     #print('Wrote solution to : ',ncfile)
     #ds2.to_netcdf(ncfile)
-    print(72*'#')
+    if verbose:
+        print(72*'#')
 
 
 if __name__=='__main__':
     #ncfile = '/home/suntans/Share/ARCHub/DATA/FIELD/ShellCrux/KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'
-    ncpath = r'C:\Users\mrayson\cloudstor\Data\Crux'
-    ncfile = '{}\KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'.format(ncpath)
+    #ncpath = r'C:\Users\mrayson\cloudstor\Data\Crux'
+    ncpath = '/home/mrayson/group/mrayson/DATA/FIELD/Crux'
+    ncfile = '{}/KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'.format(ncpath)
     depthfile = 'data/kdv_bathy_Prelude.csv'
     infile = 'data/kdvin.yml'
 
@@ -382,23 +404,26 @@ if __name__=='__main__':
     mode = 0
     basetime = datetime(2016,1,1)
 
-
-    
     ####
     # Batch 1
     ds = xr.open_dataset(ncfile, group='KP150_phs2')
-    print(ds.timeslow[0].values,ds.timeslow[-1].values)
+    if verbose:
+        print(ds.timeslow[0].values,ds.timeslow[-1].values)
     times = pd.date_range('2016-11-01','2017-05-08',freq='D')
-    for t1i,t2i in zip(times[0:-1],times[1::]):
-        t1,t2 = str(t1i), str(t2i)
+    #for t1i,t2i in zip(times[0:-1],times[1::]):
+    nsteps = times.shape[0]
+    for ii in range(rank, nsteps-1, size): # Cycle through MPI
+        t1,t2 = str(times[ii]), str(times[ii+1])
         invert_kdv(ds, depthfile, infile, t1, t2, mode, outpath, sitename, basetime)
     
     ####
     # Batch 2
     ds = xr.open_dataset(ncfile, group='KP150_phs1')
-    print(ds.timeslow[0].values,ds.timeslow[-1].values)
+    if verbose:
+        print(ds.timeslow[0].values,ds.timeslow[-1].values)
     times = pd.date_range('2016-05-01','2016-09-15',freq='D')
-    for t1i,t2i in zip(times[0:-1],times[1::]):
-        t1,t2 = str(t1i), str(t2i)
-        print(t1,t2)
+    #for t1i,t2i in zip(times[0:-1],times[1::]):
+    nsteps = times.shape[0]
+    for ii in range(rank, nsteps-1, size): # Cycle through MPI
+        t1,t2 = str(times[ii]), str(times[ii+1])
         invert_kdv(ds, depthfile, infile, t1, t2, mode, outpath, sitename, basetime)
