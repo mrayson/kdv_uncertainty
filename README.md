@@ -11,7 +11,7 @@ See status [here](https://github.com/mrayson/kdv_uncertainty/blob/master/paper-s
 
 The following code repositories are linked to this project:
 
-- [https://bitbucket.org/mrayson/iwaves] KdV solver code
+- [https://github.com/mrayson/iwaves] KdV solver code
 - [https://github.com/hhau/ddcurves2] Bayesian inference code (R, Stan) for density-depth profiles (private)
 - [https://bitbucket.org/arcoffhub/run-ddcurves] My code for running the ddcurves package with new data (r wrapper functions)
 - [https://github.com/alan-turing-institute/Soliton] Code for running kdv solver in the azure cloud and shiny dashboard for viewing results. (private)
@@ -40,7 +40,9 @@ Slightly related is this project
  
  - pull it down on pawsey:
      
-     `shifter pull mrayson/iwaves`
+     ~~`shifter pull mrayson/iwaves`~~
+     `module load singularity`
+     `singularity pull mrayson/iwaves`
 
 ---
 

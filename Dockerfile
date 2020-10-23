@@ -38,7 +38,8 @@ LABEL maintainer="matt.rayson@uwa.edu.au"
 # Use pip
 RUN pip install pyyaml
 RUN conda install -y git 
-RUN pip install git+https://bitbucket.org/mrayson/iwaves.git@master
+#RUN pip install git+https://bitbucket.org/mrayson/iwaves.git@master
+RUN pip install git+https://github.com/mrayson/iwaves.git@master
 RUN pip install git+https://github.com/mrayson/soda.git@python3pip
 #
 # input a0 and beta files need to be in this directory (or a subdir)
