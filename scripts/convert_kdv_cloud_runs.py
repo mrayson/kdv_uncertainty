@@ -33,10 +33,11 @@ dask.config.set(scheduler='processes')
 #outpath = 'slim-harmonic_beta_a0'
 #outpath = 'slim-harmonic_beta_pred_a0'
 #outpath = 'slim-harmonic_beta_band6_a0'
-outpath = 'slim-fblock-20072009'
+#outpath = 'slim-fblock-20072009'
 #outpath = 'slim-harmonic_beta_band3_a0'
-#nt = 367
-nt = 1127
+outpath = 'slim-harmonic_beta_band6_a0_bugfix'
+nt = 367
+#nt = 1127
 nsamples = 500
 ################
 
