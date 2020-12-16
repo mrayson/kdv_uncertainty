@@ -5,18 +5,20 @@
 ####
 # Run specific arguments
 runtime:
-    runtime: 129600 # Run time [seconds]
+    runtime: 70600 # Run time [seconds]
     ntout: 240 # Number of time steps per output poin
     xpt: 101500 # x-location of point for high-frequency output [m]
+    Nz: 50 # Number of vertical layers for eigenvalue calcs 
 
 ####
 # KdV solver specific arguments
 kdvargs:
     dt: 15. # time step [seconds]
     mode: 0 # Vertical mode number (base zero)
-    Nsubset: 20 # Number of points to subset for vertical mode calculation
-    nu_H: 1.0 # Horizontal eddy viscosity [m^2/s]
-    nonlinear: True # Include nonlinear term in KdV equation
-    nonhydrostatic: True # Include dispersion term in KdV equation
+    Nsubset: 10 # Number of points to subset for vertical mode calculation
+    nu_H: 0.0 # Horizontal eddy viscosity [m^2/s]
+    nonlinear: 1 # Include nonlinear term in KdV equation
+    nonhydrostatic: 1 # Include dispersion term in KdV equation
     spongedist: 20000. # Right hand sponge distance [m]
+    spongetime: 300. # Right hand sponge distance [m]
 
