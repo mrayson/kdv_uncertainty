@@ -140,10 +140,10 @@ cn_mu_t = np.zeros((nsamples,nt))
 
 for ii in range(0,nt):
 
-    a0_tmp = load_h5_step_slim('a0_samples', ii+1)
+    a0_tmp = load_h5_step_slim('a0', ii+1)
     amax_tmp = load_h5_step_slim('max_amplitude', ii+1)
-    ubed_tmp = load_h5_step_slim('max_u_seabed', ii+1)
-    usurf_tmp = load_h5_step_slim('max_u_surface', ii+1)
+    #ubed_tmp = load_h5_step_slim('max_u_seabed', ii+1)
+    #usurf_tmp = load_h5_step_slim('max_u_surface', ii+1)
     beta_tmp = load_h5_step_slim('beta_samples', ii+1)
 
     ns = a0_tmp.shape[0]
@@ -152,21 +152,22 @@ for ii in range(0,nt):
     #alpha_tmp, c_tmp = calc_alpha(beta_tmp.T, zout, nsamples=ns, mode=0)    
     tmax_tmp = load_h5_step_slim('tmax', ii+1)
     c_tmp = load_h5_step_slim('c1', ii+1)
-    r10 = load_h5_step_slim('r10', ii+1)
-    alpha_tmp = -2*c_tmp*r10
+    r10 = load_h5_step_slim('alpha', ii+1)
+    #alpha_tmp = -2*c_tmp*r10
+    alpha_tmp = 1*r10
 
-    r20 = load_h5_step_slim('r20', ii+1)
-    alpha2_tmp = -3*r20*c_tmp*c_tmp
+    #r20 = load_h5_step_slim('r20', ii+1)
+    #alpha2_tmp = -3*r20*c_tmp*c_tmp
 
     # Try getting the mean alpha and c variables
     #try:
     cmu_tmp = load_h5_step_slim('c1_mu', ii+1)
-    r10_mu = load_h5_step_slim('r10_mu', ii+1)
+    r10_mu = load_h5_step_slim('alpha_mu', ii+1)
     cn_mu_t[0:ns,ii] = cmu_tmp
-    alpha_mu_t[:ns,ii] = -2*cmu_tmp*r10_mu
+    alpha_mu_t[:ns,ii] = 1*r10_mu
 
-    r20_mu = load_h5_step_slim('r20_mu', ii+1)
-    alpha2_mu_t[:ns,ii] = -3*cmu_tmp*cmu_tmp*r20_mu
+    #r20_mu = load_h5_step_slim('r20_mu', ii+1)
+    #alpha2_mu_t[:ns,ii] = -3*cmu_tmp*cmu_tmp*r20_mu
 
 
     #except:
@@ -178,10 +179,10 @@ for ii in range(0,nt):
     a0_t[0:ns,ii] = a0_tmp
     amax_t[0:ns,ii] = amax_tmp
     tmax_t[0:ns,ii] = tmax_tmp
-    ubed_max_t[0:ns,ii] = ubed_tmp
-    usurf_max_t[0:ns,ii] = usurf_tmp
+    #ubed_max_t[0:ns,ii] = ubed_tmp
+    #usurf_max_t[0:ns,ii] = usurf_tmp
     alpha_t[0:ns,ii] = alpha_tmp
-    alpha2_t[0:ns,ii] = alpha2_tmp
+    #alpha2_t[0:ns,ii] = alpha2_tmp
     cn_t[0:ns,ii] = c_tmp
 
     beta_t[ii,0:ns,:] = beta_tmp.T

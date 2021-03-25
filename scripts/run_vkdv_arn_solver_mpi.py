@@ -288,122 +288,15 @@ def run_vkdv(F_a0, twave, ampfac, runtime, mykdv, infile, verbose=False, ramptim
     
     # Output the boundary amplitude
     a0 = bcfunc(F_a0, twave, ampfac, tfast, ramptime)
+    max_a0,_ = maximum_amplitude_finder(a0)
 
-    return max_output_amplitude, a0, B_pt, tfast, tmax, mykdv, idx #, ds2.merge( ds )
+    # Just output the last 24 hours of model solution. This ensures that the 
+    # output vector length is the same for all simulations
+    i0 = int(86400/mykdv.dt)
 
-
-def run_solver(a0_sample, beta_sample, infile, depthfile,\
-        rho_std,rho_mu,z_std):
-    """
-    instantiate an run the actual PDE solver, returning the full list of output amplitudes, plus the (signed)
-    maximum amplitude.
-    """
-   
-    # Parse the yaml file
-    with open(infile, 'r') as f:
-        args = yaml.load(f,Loader=yaml.FullLoader)
-
-        kdvargs = args['kdvargs']
-        kdvargs.update({'wavefunc':zeroic})
-
-        # Set the buoyancy eigenfunction to save time (not used here...)
-        kdvargs.update({'D10':-1})
-        kdvargs.update({'D01':-1})
-        kdvargs.update({'D20':-1})
-
-        runtime = args['runtime']['runtime']
-        ntout = args['runtime']['ntout']
-        output_x =  args['runtime']['xpt']
-
-    # Parse the density and depth files
-    depthtxt = np.loadtxt(depthfile, delimiter=',')
-
-    x_domain = depthtxt[:,0]
-
-
-    #    print("p2 for a0 {}".format(a0_sample))
-    omega = 2*np.pi/(12.42*3600)
-
-    #x_domain = np.arange(0,L_d+dx, dx)
-    #    print("running kdv solver for a0 {}".format(a0_sample))
-    #rho_std = 1.5
-    #rho_mu = 1024.
-    #z_std = 100.
-    #z_new = np.arange(0, zmax,-dz)
-    dz = 5
-    z_new = np.arange(-depthtxt[0,1],dz,dz)[::-1]
-    #rho_sample = double_tanh(z_new, beta_sample)
-    rho_sample = double_tanh(z_new/z_std, beta_sample)*rho_std + rho_mu
- 
-    # Find the ouput x location
-    xpt = np.argwhere(x_domain >= output_x)[0,0]
-    
-    # Boundary forcing function
-    def bcfunc(t):
-        return a0_sample*np.sin(omega*t)
-
-    def amp_at_x(kdv):
-        #u_vel, w_vel = kdv.calc_velocity()
-        u_vel = calc_u_velocity_1d(kdv, kdv.B[xpt], xpt)
-        # u_vel is now a matrix size [Nx, Nz]
-        u_surface = u_vel[0]
-        u_seabed = u_vel[-1]
-
-        return kdv.B[xpt], u_surface, u_seabed
-
-    # Parse the density and depth files
-    depthtxt = np.loadtxt(depthfile, delimiter=',')
-
-    # Initialise the KdV class
-    try:
-        mykdv = vKdV(rho_sample, z_new, depthtxt[:,1], \
-            x=depthtxt[:,0], **kdvargs)
-    except:
-        print('Failed to init vKdV on core: ', rank)
-        print('rho samples: ', rho_sample[0], rho_sample[-1], z_new[0],z_new[-1])
-        print('betas: ', beta_sample)
-        return -999, -1, -1, -1, -1, -1, -1
-
-
-
-    ## Run the model
-    try:
-        nsteps = int(runtime // kdvargs['dt'])
-        nn=0
-        output_amplitude = []
-        for ii in range(nsteps):
-            if mykdv.solve_step(bc_left=bcfunc(mykdv.t)) != 0:
-                print( 'Blowing up at step: %d'%ii)
-                break
-            
-            # Evalute the function
-            output_amplitude.append(amp_at_x(mykdv))
-    except:
-        print('Model crashed!!')
-        print('rho samples: ', rho_sample[0], rho_sample[-1], z_new[0],z_new[-1])
-        print('betas: ', beta_sample)
-        return -999, -1, -1, -1, -1, -1, -1
-
-
-    output = np.array( [[aa[0], aa[1], aa[2]] for aa in output_amplitude])
-    output_amplitude = output[:,0]
-    output_u_surface = output[:,1]
-    output_u_seabed = output[:,2]
-
-    #if rank == 0:
-    #    plt.figure()
-    #    plt.plot(output_u_seabed)
-    #    plt.show()
-
-    max_output_amplitude, tidx = maximum_amplitude_finder(output_amplitude)
-    max_output_u_surface, _ = maximum_amplitude_finder(output_u_surface)
-    max_output_u_seabed, _ = maximum_amplitude_finder(output_u_seabed)
-    tmax = tidx*mykdv.dt_s
-
-    return max_output_amplitude, output_amplitude, \
-        max_output_u_surface, max_output_u_seabed, tmax, mykdv, xpt
-
-
+    return max_output_amplitude, max_a0,\
+        B_pt[-i0:-1], tfast[-i0:-1],\
+        tmax, mykdv, idx #, ds2.merge( ds )
 
 def process_timepoint(timepoint, a0_ds, beta_ds, num_samples,
                      infile, depthfile, outpath,
@@ -436,6 +329,7 @@ def process_timepoint(timepoint, a0_ds, beta_ds, num_samples,
     max_u_surface_all = []
     max_u_seabed_all = []
     all_tmax = []
+    all_density_params = []
     for sample in range(num_samples):
         if rank==0:
             print("Processing timepoint {}, sample {}, infile {}".\
@@ -450,7 +344,6 @@ def process_timepoint(timepoint, a0_ds, beta_ds, num_samples,
             init_vkdv_ar1(depthfile, infile, beta_ds, a0_ds,\
                 sample, t1, t2, basetime=datetime(2016,1,1))
 
-        print(twave, ampfac, runtime)
         max_amplitude, a0, amplitudes, tfast, tmax, mykdv, xpt =\
             run_vkdv(F_a0, twave, ampfac, runtime, mykdv, infile, verbose=False)
         toc = time()
@@ -471,6 +364,7 @@ def process_timepoint(timepoint, a0_ds, beta_ds, num_samples,
         all_alpha.append(mykdv.alpha[xpt])
         all_beta.append(mykdv.beta[xpt])
         all_tmax.append(tmax)
+        all_density_params.append(density_params)
 
         if mykdv.ekdv:
             all_r20.append(mykdv.r20[xpt])
@@ -503,7 +397,7 @@ def process_timepoint(timepoint, a0_ds, beta_ds, num_samples,
     slim_outfile.create_dataset("time", data = timeout)
     slim_outfile.create_dataset("a0",data=np.array(all_a0))
     slim_outfile.create_dataset("A",data=np.array(all_amplitudes))
-    slim_outfile.create_dataset("beta_samples",data=np.array(density_params))
+    slim_outfile.create_dataset("density_params",data=np.array(all_density_params))
     slim_outfile.create_dataset("max_amplitude",data=np.array(max_amplitudes))
     #slim_outfile.create_dataset("max_u_surface",data=np.array(max_u_surface_all))
     #slim_outfile.create_dataset("max_u_seabed",data=np.array(max_u_seabed_all))
@@ -587,8 +481,11 @@ if __name__ == '__main__':
     numtime = len(tps)
     for ii in range(rank, numtime, size):
         tp = tps[ii]
+        #try:
         process_timepoint(tp, a0_ds,
                  beta_ds, num_samples,
                  args.infile, args.depthfile, args.outpath,
-             )
+        )
+        #except:
+        #    print('Timepoint {} failed! (rank={})'.format(ii,rank))
     

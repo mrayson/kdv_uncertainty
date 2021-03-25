@@ -1,13 +1,13 @@
 #!/bin/bash --login
 #
 #SBATCH --account=pawsey0106
-#SBATCH --time=24:00:00
+#SBATCH --time=08:00:00
 ##SBATCH --time=00:10:00
 #SBATCH --partition=workq
 ##SBATCH --partition=debugq
 #SBATCH --output=LOGS/vkdvsingularity-%j.out
-#SBATCH --nodes=6
-#SBATCH --ntasks=144
+#SBATCH --nodes=8
+#SBATCH --ntasks=192
 ##SBATCH --nodes=1
 ##SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
@@ -18,23 +18,26 @@
 module load singularity
   
 # Define the container to use
-export myRepository=$MYGROUP/singularity/ocean-python
-export containerImage=$myRepository/ocean-python_sfoda001_iwaves040.sif
+#export myRepository=$MYGROUP/singularity/ocean-python
+#export containerImage=$myRepository/ocean-python_sfoda001_iwaves040.sif
+#PYTHONSCRIPT=scripts/run_vkdv_solver_mpi.py 
+
+#export containerImage=$myRepository/ocean_python_sfoda005_iwaves050.sif
+#export containerImage=docker://mrayson/ocean_python:sfoda005_iwaves050
+export containerImage=ocean_python_sfoda005_iwaves050.sif
+PYTHONSCRIPT=scripts/run_vkdv_arn_solver_mpi.py 
 
 export SOLITON_HOME=$MYSCRATCH/KDV
 export CODE_DIR=$MYGROUP/KDV
 
 srun -u --export=all \
     -n $SLURM_NTASKS singularity exec $containerImage \
-    python -u scripts/run_vkdv_solver_mpi.py \
+    python -u $PYTHONSCRIPT\
         --beta_infile $CODE_DIR/inputs/$3 \
-        --infile ./data/kdvin_prelude.yml \
-        --depthfile ./data/kdv_bathy_Prelude_WELGA_bathy.csv \
-        --num_samples 500 \
-        --tp_min 1\
-        --tp_max $4 \
         --a0_infile $CODE_DIR/inputs/$1 \
-        --outpath $2
-        #--a0_infile $CODE_DIR/inputs/a0_samples_harmonic_a0_variable_lag_2019-07-18.h5 \
-        #--outpath slim-vi-lag-welbathy \
+        --infile ./data/kdvin.yml \
+        --depthfile ./data/kdv_bathy_Prelude_WELGA_bathy.csv \
+        --num_samples $5 \
+        --outpath $2 \
+        --num_tp $4
 

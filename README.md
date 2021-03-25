@@ -42,7 +42,7 @@ Slightly related is this project
      
      ~~`shifter pull mrayson/iwaves`~~
      `module load singularity`
-     `singularity pull mrayson/iwaves`
+     `singulity pull docker://mrayson/ocean_python:sfoda005_iwaves050`
 
 ---
 
