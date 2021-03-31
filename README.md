@@ -7,6 +7,12 @@ Manderson et al., 2018, Uncertainty quantification of density and stratification
 Rayson et al., 2018, Prediction of nonlinear internal wave amplitude in shelf seas with uncertainty quantification, **in preparation**
 See status [here](https://github.com/mrayson/kdv_uncertainty/blob/master/paper-status.md): 
 
+## Important scripts
+
+ - `scripts/estimate_a0_harmonic_pymc3.py': estimate the a0 parameters using harmonics only
+ - `scripts/estimate_a0_harmonic_arn_pymc3.py': estimate the a0 parameters using harmonics plus an autoregresive residual
+ - 
+
 ## Other repositories
 
 The following code repositories are linked to this project:
