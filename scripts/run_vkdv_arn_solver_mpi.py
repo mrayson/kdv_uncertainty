@@ -426,6 +426,13 @@ def load_beta_h5(betafile):
         rho_mu = np.array(f['data/rho_mu'])
 
     nparams, nt, nsamples = beta_samples.shape
+
+    # Scale the beta parameters
+    beta_samples[0,...] *= rho_std
+    beta_samples[0,...] += rho_mu
+    beta_samples[1,...] *= rho_std
+    beta_samples[2::,...] *= z_std
+
     return xr.DataArray(beta_samples, dims=('params','time','draw'), 
                  coords={'time':t_beta,'params':range(nparams), 'draw':range(nsamples)})
 

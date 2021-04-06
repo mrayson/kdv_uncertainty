@@ -12,8 +12,8 @@
 ##SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
 ##SBATCH --mem=64000
-##SBATCH --mail-type=ALL
-##SBATCH --mail-user=matt.rayson@uwa.edu.au
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=matt.rayson@uwa.edu.au
 
 module load singularity
   
