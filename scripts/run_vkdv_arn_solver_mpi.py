@@ -111,10 +111,11 @@ def calc_u_velocity_1d(kdv, A, idx):
 
     return np.gradient(psi, -kdv.dZ[idx])
 
-# KdV function
-def bcfunc(F_a0, twave, ampfac, t, ramptime):
+# KdV functions
+def bcfunc(F_a0, t, ramptime, twave=0, ampfac=1.):
     
     # Interpolate the boundary and apply the time offset and amplitude scaling
+    # I think that I'm double counting the time-offset somewhere along the way
     a = F_a0(t-twave)/ampfac
     
     rampfac = 1 - np.exp(-(t)/ramptime)
@@ -259,7 +260,8 @@ def run_vkdv(F_a0, twave, ampfac, runtime, mykdv, infile, verbose=False, ramptim
         # Log output
         point = nsteps//100
         
-        bcleft = bcfunc(F_a0, twave, ampfac, mykdv.t, ramptime)
+        #bcleft = bcfunc(F_a0, twave, ampfac, mykdv.t, ramptime)
+        bcleft = bcfunc(F_a0,  mykdv.t, ramptime, twave=-twave, ampfac=1.)
         #print(bcleft)
         
         if verbose:
@@ -394,7 +396,8 @@ def process_timepoint(timepoint, a0_ds, beta_ds, num_samples,
     #print(slim_outfile_name, density_params)
     timeout = (t0+tfast.astype('timedelta64[s]')).astype('<M8[ns]').astype(int)
     slim_outfile = h5py.File(slim_outfile_name,"w")
-    slim_outfile.create_dataset("time", data = timeout)
+    #slim_outfile.create_dataset("time", data = timeout)
+    slim_outfile.create_dataset("time", data = t1.astype('<M8[ns]').astype(int))
     slim_outfile.create_dataset("a0",data=np.array(all_a0))
     slim_outfile.create_dataset("A",data=np.array(all_amplitudes))
     slim_outfile.create_dataset("density_params",data=np.array(all_density_params))
