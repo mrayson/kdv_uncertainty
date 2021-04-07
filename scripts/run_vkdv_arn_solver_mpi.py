@@ -289,7 +289,8 @@ def run_vkdv(F_a0, twave, ampfac, runtime, mykdv, infile, verbose=False, ramptim
     tmax = tidx*mykdv.dt
     
     # Output the boundary amplitude
-    a0 = bcfunc(F_a0, twave, ampfac, tfast, ramptime)
+    #a0 = bcfunc(F_a0, twave, ampfac, tfast, ramptime)
+    a0 = bcfunc(F_a0,  tfast, ramptime, twave=-twave, ampfac=1.)
     max_a0,_ = maximum_amplitude_finder(a0)
 
     # Just output the last 24 hours of model solution. This ensures that the 
