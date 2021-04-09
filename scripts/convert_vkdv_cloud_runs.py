@@ -40,10 +40,10 @@ dask.config.set(scheduler='processes')
 #outpath = 'slim-harmonic_beta_nonstat_a0_bugfix'
 #outpath = 'slim-AR_a0_harmonic_beta'
 
-#outpath = 'slim-stoch_a0_data_rho_v2'
-#outpath = 'slim-stoch_a0_clim_rho_v2'
-#outpath = 'slim-harmo_a0_data_rho_v2'
-outpath = 'slim-harmo_a0_clim_rho_v2'
+outpath = 'slim-stoch_a0_data_rho_v3'
+#outpath = 'slim-stoch_a0_clim_rho_v3'
+#outpath = 'slim-harmo_a0_data_rho_v3'
+#outpath = 'slim-harmo_a0_clim_rho_v3'
 nt = 367
 #nt = 1127
 nsamples = 500
@@ -141,6 +141,7 @@ cn_mu_t = np.zeros((nsamples,nt))
 
 # In[14]:
 
+time=[]
 
 for ii in range(0,nt):
 
@@ -172,6 +173,16 @@ for ii in range(0,nt):
 
     #r20_mu = load_h5_step_slim('r20_mu', ii+1)
     #alpha2_mu_t[:ns,ii] = -3*cmu_tmp*cmu_tmp*r20_mu
+    tnow = load_h5_step_slim('t1',ii+1)
+    if isinstance(tnow, (np.ndarray,) ):
+        time.append(np.datetime64('2099-01-01'))
+    else:
+        time.append(tnow.astype('<M8[ns]'))
+
+    #try:
+    #    time.append(load_h5_step_slim('t1',ii+1).astype('<M8[ns]'))
+    #except:
+    print(time[ii])
 
 
     #except:
@@ -200,7 +211,10 @@ dims2 = ('ensemble','time')
 dims3 = ('time','ensemble','params')
 
 #time = rho.time.values
-time = range(nt)
+#time = range(nt)
+time = np.array(time)
+print(time[-7::])
+
 coords2 = {'time':time, 'ensemble':range(nsamples)}
 coords3 = {'time':time, 'ensemble':range(nsamples), 'params':range(6)}
            

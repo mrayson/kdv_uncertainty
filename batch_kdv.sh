@@ -19,10 +19,10 @@ HARMONICA0=a0_samples_harmonicfit_M2S2N2K1O1_na0_dt20min_12month.nc
 RHODATA=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_v5.h5
 RHOCLIM=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction_v5.h5
 
-sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_data_rho_v2 $RHODATA 367 500
-sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_clim_rho_v2 $RHOCLIM 367 500
-sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v2 $RHODATA 367 500
-sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v2 $RHOCLIM 367 500
+sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_data_rho_v3 $RHODATA 367 500
+sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_clim_rho_v3 $RHOCLIM 367 500
+sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v3 $RHODATA 367 500
+sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v3 $RHOCLIM 367 500
 
 #####
 # Send a few vkdv runs to the queue
