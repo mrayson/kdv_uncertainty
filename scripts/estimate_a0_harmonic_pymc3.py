@@ -29,16 +29,20 @@ import matplotlib as mpl
 ########
 # Input variables
 
-a0file = '/home/suntans/Projects/ARCHub/DATA/FIELD/ShellCrux/KP150_Fitted_Buoyancy_wout_motion.nc'
+#a0file = '/home/suntans/Projects/ARCHub/DATA/FIELD/ShellCrux/KP150_Fitted_Buoyancy_wout_motion.nc'
 
-subsample = 20
+basedir = '/home/suntans/cloudstor/Data/Crux/'
+a0file ='{}/KP150_Fitted_Buoyancy_wout_motion_unvenfilt.nc'.format(basedir)
+
+
+subsample = 60
 
 tidecons = ['M2','S2','N2','K1','O1'] # Tidal harmonic
-number_annual_harmonics = 0
+number_annual_harmonics = 3
 basetime = datetime(2016,1,1)
 
 sitename = 'M2S2N2K1O1_na{}_dt{}min'.format(number_annual_harmonics, subsample)
-outputnc = 'inputs/a0_samples_harmonicfit_{}_12month.nc'.format(sitename)
+outputnc = '../inputs/a0_samples_harmonicfit_{}_12month.nc'.format(sitename)
 
 # Prediction time
 predtime = pd.date_range('2016-05-01','2017-05-02',freq='1H').values
@@ -60,6 +64,20 @@ def sine_model_notrend(beta_s, ff, t, maths=pm.math):
 
     return result
 
+def sine_model(beta_mu, beta_r, beta_i, ff, t, maths=pm.math):
+    """
+    Sum of sinusoids mean function
+    
+    Set maths == np to use numpy libary
+    """
+    n = len(ff)
+    result = beta_mu+0*t
+    for ii in range(0,n): 
+        result += beta_r[ii]*maths.cos(ff[ii] * t) +\
+            beta_i[ii]*maths.sin(ff[ii]*t)
+
+    return result
+
 
 def harmonic_fit_mcmc(time, X, frq, mask=None, axis=0, basetime=None,         **kwargs):
     """
@@ -76,6 +94,7 @@ def harmonic_fit_mcmc(time, X, frq, mask=None, axis=0, basetime=None,         **
     
     # Number of parameters
     n_params = 2*len(omega) + 1
+    nomega = len(omega)
     
     print('Number of Parametrs: %d\n'%n_params, omega)
 
@@ -86,16 +105,20 @@ def harmonic_fit_mcmc(time, X, frq, mask=None, axis=0, basetime=None,         **
 
         # Mean
         beta_mean = pm.Normal('beta_mean', mu=0, sd=1)
-        beta_s=[beta_mean]
+        
+        
+        beta_re = pm.Normal('beta_re', mu=1., sd = 5., shape=nomega)
+        beta_im = pm.Normal('beta_im', mu=1., sd = 5., shape=nomega)
+
+        #beta_s=[beta_mean]
 
         # Harmonics
-        for n in range(0,2*len(omega),2):
-            beta_s.append(pm.Normal('beta_%d_re'%(n//2), mu=1., sd = 5.))
-            beta_s.append(pm.Normal('beta_%d_im'%(n//2), mu=1., sd = 5.))
-
+        #for n in range(0,2*len(omega),2):
+        #    beta_s.append(pm.Normal('beta_%d_re'%(n//2), mu=1., sd = 5.))
+        #    beta_s.append(pm.Normal('beta_%d_im'%(n//2), mu=1., sd = 5.))
         
         # The mean function
-        mu_x = sine_model_notrend(beta_s, omega, dtime)
+        mu_x = sine_model(beta_mean, beta_re, beta_im, omega, dtime)
         
         ###
         # Generate the likelihood function using the deterministic variable as the mean
@@ -119,14 +142,23 @@ def generate_harmonic_sample(dtime, omega, trace):
     T = dtime.shape[0]
     y = np.zeros((T,))
     
-    betas = [trace['beta_mean']]
     nomega = len(omega)
-    for ii in range(nomega):
-        betas.append(trace['beta_{}_re'.format(ii)])
-        betas.append(trace['beta_{}_im'.format(ii)])
+    
+    #betas = [trace['beta_mean']]
+    #for ii in range(nomega):
+    #    betas.append(trace['beta_{}_re'.format(ii)])
+    #    betas.append(trace['beta_{}_im'.format(ii)])
  
     # Add on an oscillatory component
-    mu = sine_model_notrend(betas, omega, dtime, maths=np)
+    #mu = sine_model_notrend(betas, omega, dtime, maths=np)
+    
+    beta_mu = trace['beta_mean']
+    beta_re = trace['beta_re']
+    beta_im = trace['beta_im']
+ 
+    # Add on an oscillatory component
+    mu = sine_model(beta_mu, beta_re, beta_im, omega, dtime, maths=np)
+    
     y+=mu
     
     return y
