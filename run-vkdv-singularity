@@ -35,7 +35,7 @@ srun -u --export=all \
     python -u $PYTHONSCRIPT\
         --beta_infile $CODE_DIR/inputs/$3 \
         --a0_infile $CODE_DIR/inputs/$1 \
-        --infile ./data/kdvin.yml \
+        --infile $6 \
         --depthfile ./data/kdv_bathy_Prelude_WELGA_bathy.csv \
         --num_samples $5 \
         --outpath $2 \

@@ -40,7 +40,9 @@ dask.config.set(scheduler='processes')
 #outpath = 'slim-harmonic_beta_nonstat_a0_bugfix'
 #outpath = 'slim-AR_a0_harmonic_beta'
 
-outpath = 'slim-stoch_a0_data_rho_v3'
+#outpath = 'slim-seasonal_a0_data_rho_v3'
+outpath = 'slim-seasonal_a0_clim_rho_v3'
+#outpath = 'slim-stoch_a0_data_rho_v3'
 #outpath = 'slim-stoch_a0_clim_rho_v3'
 #outpath = 'slim-harmo_a0_data_rho_v3'
 #outpath = 'slim-harmo_a0_clim_rho_v3'

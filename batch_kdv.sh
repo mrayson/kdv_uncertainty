@@ -16,13 +16,19 @@
    
 STOCHASTICA0=a0_samples_harmonicfit_M2S2N2K1O1_na0_AR4_dt20min_12month.nc
 HARMONICA0=a0_samples_harmonicfit_M2S2N2K1O1_na0_dt20min_12month.nc
+SEASONALA0=a0_samples_harmonicfit_M2S2N2K1O1_na3_dt60min_12month.nc
 RHODATA=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_v5.h5
 RHOCLIM=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction_v5.h5
+INFILE=./data/kdvin.yml
+INFILEHYDRO=./data/kdvin_hydrostatic.yml
 
-sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_data_rho_v3 $RHODATA 367 500
-sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_clim_rho_v3 $RHOCLIM 367 500
-sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v3 $RHODATA 367 500
-sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v3 $RHOCLIM 367 500
+sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_hydrostatic $RHODATA 367 500 $INFILEHYDRO
+#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_v3 $RHODATA 367 500 $INFILE
+#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_clim_rho_v3 $RHOCLIM 367 500 $INFILE
+#sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_data_rho_v3 $RHODATA 367 500
+#sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_clim_rho_v3 $RHOCLIM 367 500
+#sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v3 $RHODATA 367 500
+#sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v3 $RHOCLIM 367 500
 
 #####
 # Send a few vkdv runs to the queue
