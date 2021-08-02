@@ -26,12 +26,12 @@ def make_suntans_kdv(suntanspath, t1, t2, draw_num):
     beta_infile = 'inputs/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction.h5'
     a0_infile = 'inputs/a0_samples_harmonicfit_M2S2N2K1O1_na3_dt60min_12month.nc'
     kdvfile = 'data/kdvin.yml'
-    depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
+    depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy_1km.csv'
     mode = 0
 
     # vertical grid
     nz = 50
-    rk = 1.0
+    rk = 1.04
     dt = 1200
     icfile = 'IWave_IC.nc'
     bcfile = 'IWave_BC.nc'
@@ -86,7 +86,7 @@ def make_suntans_kdv(suntanspath, t1, t2, draw_num):
         return B
 
     nk = nz
-    z = -grd.z_r[0:nk]
+    z = grd.z_r[0:nk]
     zw = np.zeros((nk+1,))
     zw[1:] = np.cumsum(grd.dz)
 
@@ -128,7 +128,7 @@ def make_suntans_kdv(suntanspath, t1, t2, draw_num):
     #
     ## River boundaries
     grd.mark[indleft]=2
-    #grd.mark[indright]=2
+    grd.mark[indright]=2
 
     edgefile = suntanspath+'/edges.dat'
     grd.saveEdges(edgefile)

@@ -15,6 +15,7 @@ from iwaves.utils import density
 from iwaves.utils.tools import grad_z
 from iwaves.utils.isw import iwave_modes_uneven
 
+import matplotlib.pyplot as plt
 
 ### 
 # Input variables
@@ -23,7 +24,7 @@ from iwaves.utils.isw import iwave_modes_uneven
 beta_infile = 'inputs/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction.h5'
 a0_infile = 'inputs/a0_samples_harmonicfit_M2S2N2K1O1_na3_dt60min_12month.nc'
 kdvfile = 'data/kdvin.yml'
-depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
+depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy_1km.csv'
 mode = 0
 # SUNTANS inputs
 suntanspath_base = 'SCENARIOS/test_{:03d}'
@@ -89,12 +90,16 @@ def mid_extrap(A, nk):
     return B
 
 nk = nz
-z = -grd.z_r[0:nk]
+z = grd.z_r[0:nk]
 zw = np.zeros((nk+1,))
 zw[1:] = np.cumsum(grd.dz)
 
 salt = density.double_tanh_rho_new2(-z, *density_params) - 1000.
 saltw = density.double_tanh_rho_new2(-zw, *density_params) - 1000.
+
+#plt.figure()
+#plt.plot(salt, -z)
+#plt.show()
 
 N2 = -9.81/1024 * grad_z(saltw, -zw)
 
@@ -139,7 +144,7 @@ grd.saveEdges(edgefile)
 
 #Load the boundary object from the grid
 #   Note that this zeros all of the boundary arrays
-bnd = Boundary(suntanspath,(starttime,endtime,dt))
+bnd = Boundary(suntanspath,(starttime,endtime,dt), projstr=None)
 
 bnd.setDepth(grd.dv)
 
@@ -164,7 +169,7 @@ bnd.write2NC(suntanspath+'/'+bcfile)
 #########
 # Create the initial conditions file
 #########
-IC = InitialCond(suntanspath,starttime)
+IC = InitialCond(suntanspath,starttime, projstr=None)
 
 IC.S[:,:,:] = salt[np.newaxis,:,np.newaxis]
 
