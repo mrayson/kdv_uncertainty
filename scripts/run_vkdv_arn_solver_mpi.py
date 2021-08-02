@@ -173,7 +173,8 @@ def init_vkdv_ar1( depthfile, infile, beta_ds, a0_ds, draw_num, t1, t2, basetime
     # Load the density profile parameters
     density_params = beta_ds.sel(time=t1, draw=draw_num, method='nearest').values
 
-    rhonew = density.double_tanh_rho_new2(z, *density_params)
+    #rhonew = density.double_tanh_rho_new2(z, *density_params)
+    rhonew = double_tanh(z, density_params)
     
     # Launch a KdV instance
     mykdv =  start_kdv(infile, rhonew, z, depthfile)
