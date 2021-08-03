@@ -26,7 +26,7 @@ def make_suntans_kdv(suntanspath, t1, t2, draw_num):
     beta_infile = 'inputs/ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction.h5'
     a0_infile = 'inputs/a0_samples_harmonicfit_M2S2N2K1O1_na3_dt60min_12month.nc'
     kdvfile = 'data/kdvin.yml'
-    depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy_1km.csv'
+    depthfile = 'data/kdv_bathy_Prelude_WELGA_bathy.csv'
     mode = 0
 
     # vertical grid
