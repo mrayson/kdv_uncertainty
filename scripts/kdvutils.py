@@ -36,6 +36,15 @@ def load_beta_h5(betafile):
     return xr.DataArray(beta_samples, dims=('params','time','draw'), 
                  coords={'time':t_beta,'params':range(nparams), 'draw':range(nsamples)})
 
+def double_tanh(z, beta):
+    res = beta[0] - beta[1] * (np.tanh((z + beta[2]) / beta[3]) + np.tanh((z + beta[4]) / beta[5]))
+    return(res)
+
+
+def zeroic(x,a0,Lw,x0=0):
+    return 0.*x
+
+
 # KdV functions
 def bcfunc(F_a0, t, ramptime, twave=0, ampfac=1.):
     
@@ -44,6 +53,37 @@ def bcfunc(F_a0, t, ramptime, twave=0, ampfac=1.):
     
     rampfac = 1 - np.exp(-(t)/ramptime)
     return a*rampfac
+
+def maximum_amplitude_finder(amp_signal):
+    amp_min = np.min(amp_signal)
+    amp_max = np.max(amp_signal)
+    if np.abs(amp_min)>amp_max:
+        bidx = (amp_signal>=amp_min) & (amp_signal<= amp_min -0.01*amp_min)
+        idx = np.argwhere(bidx)
+        return amp_min, idx[0][0]
+    else:
+        bidx = (amp_signal<=amp_max) & (amp_signal>= amp_max -0.01*amp_max)
+        idx = np.argwhere(bidx)
+        return amp_max, idx[0][0]
+    
+
+def calc_u_velocity(kdv, A):
+    # Linear streamfunction
+    psi = A * kdv.phi_1 * kdv.c1
+    # First-order nonlinear terms
+    psi += A**2. * kdv.phi10 * kdv.c1**2.
+
+    return np.gradient(psi, -kdv.dz_s)
+
+def calc_u_velocity_1d(kdv, A, idx):
+    # Linear streamfunction
+    psi = A * kdv.Phi[:,idx] * kdv.c[idx]
+    # First-order nonlinear terms
+    #psi += A**2. * kdv.phi10[:,idx] * kdv.c[idx]**2.
+
+    return np.gradient(psi, -kdv.dZ[idx])
+
+
 
 def start_kdv(infile, rho, z, depthfile):
     # Parse the yaml file
@@ -128,3 +168,155 @@ def init_vkdv_a0(depthfile, infile, beta_ds, a0_ds, draw_num, t1, t2, basetime=d
 
     return mykdv, F_a0, t0, runtime, density_params, twave[xpt], ampfac[xpt]
 
+def init_vkdv_ar1( depthfile, infile, beta_ds, a0_ds, draw_num, t1, t2, basetime=datetime(2016,1,1)):
+    """
+    Initialise the boundary conditions and the vKdV class for performing boundary condition
+    inversion (optimization) calculations
+    """
+
+
+    # Find the observation location
+    with open(infile, 'r') as f:
+        args = yaml.load(f,Loader=yaml.FullLoader)
+        xpt =  args['runtime']['xpt']
+        Nz = args['runtime']['Nz']
+    
+    # Load the depth data
+    depthtxt = np.loadtxt(depthfile, delimiter=',')
+    #z = np.arange(-depthtxt[0,1],5,5)[::-1]
+    z = np.linspace(-depthtxt[0,1],0,Nz)[::-1]
+
+    
+    # Load the density profile parameters
+    density_params = beta_ds.sel(time=t1, draw=draw_num, method='nearest').values
+
+    #rhonew = density.double_tanh_rho_new2(z, *density_params)
+    rhonew = double_tanh(z, density_params)
+    
+    # Launch a KdV instance
+    mykdv =  start_kdv(infile, rhonew, z, depthfile)
+
+    # Find the index of the output point
+    xpt = np.argwhere(mykdv.x > xpt)[0][0]
+    
+    # Compute the travel time and the wave amplification factor 
+    ampfac = 1/np.sqrt(mykdv.Q)
+
+    twave = np.cumsum(1/mykdv.c*mykdv.dx)
+       
+    # Set the time in the model to correspond with the phase of the boundary forcing
+    ## Start time: round up to the near 12 hours from the wave propagation time plus the ramp time
+    
+    starttime = np.datetime64(t1)
+    endtime = np.datetime64(t2)
+
+    ramptime = 12*3600.
+    bctime = np.timedelta64(int(myround(twave[xpt]+ramptime)),'s')
+
+    runtime = (endtime - starttime).astype('timedelta64[s]').astype(float)
+
+    t0 = starttime-bctime
+
+    runtime = runtime+bctime.astype('timedelta64[s]').astype(float)
+
+    # Need to return an interpolation object for a0 that will return a value for each model time step
+    a0timesec = (a0_ds['time'].values-t0).astype('timedelta64[s]').astype(float)
+
+    a0 =a0_ds['a0'].sel(draw=draw_num, chain=1).values
+
+    F_a0 = interp1d(a0timesec, a0, kind=2)
+
+    return mykdv, F_a0, t0, runtime, density_params, twave[xpt], ampfac[xpt]
+
+def run_vkdv(F_a0, twave, ampfac, runtime, mykdv, infile, verbose=False, ramptime=12*3600.):
+    
+    # Need to reset the amplitude variables and time step
+    mykdv.B *= 0 
+    mykdv.B_n_m1 *= 0
+    mykdv.B_n_m2 *= 0
+    mykdv.B_n_p1 *= 0
+    mykdv.t = 0 
+    
+    with open(infile, 'r') as f:
+        args = yaml.load(f,Loader=yaml.FullLoader)
+
+        kdvargs = args['kdvargs']
+        kdvargs.update({'wavefunc':zeroic})
+
+        #runtime = args['runtime']['runtime']
+        ntout = args['runtime']['ntout']
+        xpt =  args['runtime']['xpt']
+        
+    # Find the index of the output point
+    idx = np.argwhere(mykdv.x > xpt)[0][0]
+
+    # Initialise an output array
+    nsteps = int(runtime//mykdv.dt)
+    nout = int(runtime//ntout)
+    B = np.zeros((nout, mykdv.Nx)) # Spatial amplitude function
+    tout = np.zeros((nout,))
+
+    B_pt = np.zeros((nsteps, )) # Spatial amplitude function
+    tfast = np.zeros((nsteps,))
+
+    def amp_at_x(kdv):
+        #u_vel, w_vel = kdv.calc_velocity()
+        u_vel = calc_u_velocity_1d(kdv, kdv.B[idx], idx)
+        # u_vel is now a matrix size [Nx, Nz]
+        u_surface = u_vel[0]
+        u_seabed = u_vel[-1]
+
+        return kdv.B[idx], u_surface, u_seabed
+
+
+    output_amplitude = []
+    
+
+    ## Run the model
+    nn=0
+    for ii in range(nsteps):
+        # Log output
+        point = nsteps//100
+        
+        #bcleft = bcfunc(F_a0, twave, ampfac, mykdv.t, ramptime)
+        bcleft = bcfunc(F_a0,  mykdv.t, ramptime, twave=-twave, ampfac=1.)
+        #print(bcleft)
+        
+        if verbose:
+            if(ii % (5 * point) == 0):
+                print( '%3.1f %% complete...'%(float(ii)/nsteps*100)) 
+                print(mykdv.B.max(), bcleft)
+
+        if mykdv.solve_step(bc_left=bcleft) != 0:
+            print( 'Blowing up at step: %d'%ii)
+            break
+        
+        # Output data
+        if (mykdv.t%ntout) < mykdv.dt:
+            #print ii,nn, mykdv.t
+            B[nn,:] = mykdv.B[:]
+            tout[nn] = mykdv.t
+            nn+=1
+
+        # Output single point
+        B_pt[ii] = mykdv.B[idx]
+        tfast[ii] = mykdv.t
+
+
+    max_output_amplitude, tidx = maximum_amplitude_finder(B_pt)
+    tmax = tidx*mykdv.dt
+    
+    # Output the boundary amplitude
+    #a0 = bcfunc(F_a0, twave, ampfac, tfast, ramptime)
+    a0 = bcfunc(F_a0,  tfast, ramptime, twave=-twave, ampfac=1.)
+    max_a0,_ = maximum_amplitude_finder(a0)
+
+    # Just output the last 24 hours of model solution. This ensures that the 
+    # output vector length is the same for all simulations
+    i0 = int(86400/mykdv.dt)
+
+    return max_output_amplitude, max_a0,\
+        B_pt, tfast,\
+        B, tout,\
+        tmax, mykdv, idx #, ds2.merge( ds )
+        #B_pt[-i0:-1], tfast[-i0:-1],\
