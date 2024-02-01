@@ -22,11 +22,14 @@ RHOCLIM=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction_v5.h5
 INFILE=./data/kdvin.yml
 INFILEHYDRO=./data/kdvin_hydrostatic.yml
 
-#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_hydrostatic $RHODATA 367 500 $INFILEHYDRO
+# Ocean Modelling Paper MC scenarios
 sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_v4 $RHODATA 367 500 $INFILE
-sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
-sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v4 $RHODATA 367 500 $INFILE
-sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
+#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
+#sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v4 $RHODATA 367 500 $INFILE
+#sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
+
+###
+##sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_hydrostatic $RHODATA 367 500 $INFILEHYDRO
 #sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_data_rho_v3 $RHODATA 367 500
 #sbatch run-vkdv-singularity $STOCHASTICA0 slim-stoch_a0_clim_rho_v3 $RHOCLIM 367 500
 
