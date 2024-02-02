@@ -2,21 +2,18 @@
 #
 #SBATCH --account=pawsey0106
 #SBATCH --time=08:00:00
-##SBATCH --time=00:10:00
-#SBATCH --partition=workq
+#SBATCH --partition=work
 ##SBATCH --partition=debugq
 #SBATCH --output=LOGS/vkdvsingularity-%j.out
-#SBATCH --nodes=8
-#SBATCH --ntasks=192
-##SBATCH --nodes=1
-##SBATCH --ntasks=24
-#SBATCH --cpus-per-task=1
-##SBATCH --mem=64000
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=matt.rayson@uwa.edu.au
+#SBATCH --ntasks=128
+#SBATCH --ntasks-per-node=128
+##SBATCH --cpus-per-task=1
+##SBATCH --mem=117G
+#SBATCH --exclusive
+##SBATCH --mail-type=ALL
+##SBATCH --mail-user=matt.rayson@uwa.edu.au
 
-module load singularity
-  
+#module load singularity
 # Define the container to use
 #export myRepository=$MYGROUP/singularity/ocean-python
 #export containerImage=$myRepository/ocean-python_sfoda001_iwaves040.sif
@@ -24,14 +21,59 @@ module load singularity
 
 #export containerImage=$myRepository/ocean_python_sfoda005_iwaves050.sif
 #export containerImage=docker://mrayson/ocean_python:sfoda005_iwaves050
-export containerImage=ocean_python_sfoda005_iwaves050.sif
-PYTHONSCRIPT=scripts/run_vkdv_arn_solver_mpi.py 
+#export containerImage=ocean_python_sfoda005_iwaves050.sif
+
+# Set the image and tag we want to use
+dockerversion=20240201
+dockername=ocean-python
+#dockerversion=sfoda005_iwaves050
+#dockername=ocean_python
+image="docker://mrayson/${dockername}:${dockerversion}"
+ 
+# Get the image filename
+imagename=${image##*/}
+imagename=${imagename/:/_}.sif
+ 
+
+# Load Singularity
+#singularityversion=3.11.4-slurm
+singularityversion=3.11.4-mpi
+module load singularity/${singularityversion}
+ 
+# Pull our image in a folder
+singularity pull $imagename $image
+echo $imagename $image
+ 
+#PYTHONSCRIPT=scripts/run_vkdv_arn_solver_mpi.py 
+PYTHONSCRIPT=$7
+
+#Set these to have singularity bind data locations
+#export SINGULARITY_BINDPATH=/software:/software,/scratch:/scratch,/run:/run,$HOME:$HOME 
+#export SINGULARITY_BINDPATH=$MYSOFTWARE:$MYSOFTWARE,$MYSCRATCH:$MYSCRATCH,/run:/run,$HOME:$HOME 
 
 export SOLITON_HOME=$MYSCRATCH/KDV
-export CODE_DIR=$MYGROUP/KDV
+#export CODE_DIR=$MYGROUP/KDV
+export CODE_DIR=.
 
-srun -u --export=all \
-    -n $SLURM_NTASKS singularity exec $containerImage \
+# ---
+# Note we avoid any inadvertent OpenMP threading by setting
+# OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+
+# ---
+# Temporal workaround for avoiding Slingshot issues on shared nodes:
+#export FI_CXI_DEFAULT_VNI=$(od -vAn -N4 -tu < /dev/urandom)
+# ---
+# Set MPI related environment variables. (Not all need to be set)
+# Main variables for multi-node jobs (activate for multinode jobs)
+export MPICH_OFI_STARTUP_CONNECT=1
+export MPICH_OFI_VERBOSE=1
+
+
+#-u --export=ALL \
+#-c $OMP_NUM_THREADS -m block:block:block \
+srun -N $SLURM_JOB_NUM_NODES -n $SLURM_NTASKS \
+    singularity exec ${imagename} \
     python -u $PYTHONSCRIPT\
         --beta_infile $CODE_DIR/inputs/$3 \
         --a0_infile $CODE_DIR/inputs/$1 \

@@ -25,31 +25,6 @@ from time import gmtime, strftime, time
 dask.config.set(scheduler='processes')
 
 
-################
-# Inputs
-#outpath = "slim-vi-lag-welbathy"
-#outpath = 'slim-a0_optimal_GP'
-#outpath = 'slim-a0_harmonic_GP'
-#outpath = 'slim-harmonic_beta_a0'
-#outpath = 'slim-harmonic_beta_pred_a0'
-#outpath = 'slim-harmonic_beta_band6_a0'
-#outpath = 'slim-fblock-20072009'
-#outpath = 'slim-harmonic_beta_band3_a0'
-#outpath = 'slim-harmonic_beta_band6_a0_bugfix'
-#outpath = 'slim-harmonic_beta_pred_a0_bugfix'
-#outpath = 'slim-harmonic_beta_nonstat_a0_bugfix'
-#outpath = 'slim-AR_a0_harmonic_beta'
-
-#outpath = 'slim-seasonal_a0_data_rho_v4'
-#outpath = 'slim-seasonal_a0_clim_rho_v4'
-###outpath = 'slim-stoch_a0_data_rho_v4'
-###outpath = 'slim-stoch_a0_clim_rho_v4'
-#outpath = 'slim-harmo_a0_data_rho_v4'
-outpath = 'slim-harmo_a0_clim_rho_v4'
-nt = 367
-#nt = 1127
-nsamples = 500
-################
 def main(outpath, nt, nsamples=500):
 
     if "PYTHON_HOME" in os.environ.keys():
@@ -341,3 +316,30 @@ nsamples = 500
 
 for outpath in outpaths:
     main(outpath, nt)
+
+################
+# Inputs
+#outpath = "slim-vi-lag-welbathy"
+#outpath = 'slim-a0_optimal_GP'
+#outpath = 'slim-a0_harmonic_GP'
+#outpath = 'slim-harmonic_beta_a0'
+#outpath = 'slim-harmonic_beta_pred_a0'
+#outpath = 'slim-harmonic_beta_band6_a0'
+#outpath = 'slim-fblock-20072009'
+#outpath = 'slim-harmonic_beta_band3_a0'
+#outpath = 'slim-harmonic_beta_band6_a0_bugfix'
+#outpath = 'slim-harmonic_beta_pred_a0_bugfix'
+#outpath = 'slim-harmonic_beta_nonstat_a0_bugfix'
+#outpath = 'slim-AR_a0_harmonic_beta'
+
+#outpath = 'slim-seasonal_a0_data_rho_v4'
+#outpath = 'slim-seasonal_a0_clim_rho_v4'
+###outpath = 'slim-stoch_a0_data_rho_v4'
+###outpath = 'slim-stoch_a0_clim_rho_v4'
+#outpath = 'slim-harmo_a0_data_rho_v4'
+#outpath = 'slim-harmo_a0_clim_rho_v4'
+#nt = 367
+##nt = 1127
+#nsamples = 500
+################
+
