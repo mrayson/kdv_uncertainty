@@ -23,7 +23,8 @@ INFILE=./data/kdvin.yml
 INFILEHYDRO=./data/kdvin_hydrostatic.yml
 
 # Ocean Modelling Paper MC scenarios
-sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_v4 $RHODATA 367 500 $INFILE
+sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_test $RHODATA 367 10 $INFILE
+#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_v4 $RHODATA 367 500 $INFILE
 #sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
 #sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v4 $RHODATA 367 500 $INFILE
 #sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
