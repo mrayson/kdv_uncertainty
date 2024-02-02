@@ -44,7 +44,8 @@ module load singularity/${singularityversion}
 singularity pull $imagename $image
 echo $imagename $image
  
-PYTHONSCRIPT=scripts/run_vkdv_arn_solver_mpi.py 
+#PYTHONSCRIPT=scripts/run_vkdv_arn_solver_mpi.py 
+PYTHONSCRIPT=$7
 
 #Set these to have singularity bind data locations
 #export SINGULARITY_BINDPATH=/software:/software,/scratch:/scratch,/run:/run,$HOME:$HOME 

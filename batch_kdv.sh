@@ -19,11 +19,19 @@ HARMONICA0=a0_samples_harmonicfit_M2S2N2K1O1_na0_dt20min_12month.nc
 SEASONALA0=a0_samples_harmonicfit_M2S2N2K1O1_na3_dt60min_12month.nc
 RHODATA=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_v5.h5
 RHOCLIM=ShellCrux_Filtered_Density_Harmonic_MCMC_20162017_prediction_v5.h5
-INFILE=./data/kdvin.yml
 INFILEHYDRO=./data/kdvin_hydrostatic.yml
 
-# Ocean Modelling Paper MC scenarios
-sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_test $RHODATA 367 10 $INFILE
+# Review 2 scenarios
+PYTHONSCRIPT=scripts/run_rvkdv_solver_mpi.py 
+INFILE=./data/rvkdvin.yml
+#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_rvkdv_test $RHODATA 367 10 $INFILE $PYTHONSCRIPT
+sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_rvkdv $RHODATA 367 500 $INFILE $PYTHONSCRIPT
+sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_clim_rho_rvkdv $RHOCLIM 367 500 $INFILE $PYTHONSCRIPT
+
+# Original Ocean Modelling Paper MC scenarios
+#PYTHONSCRIPT=scripts/run_vkdv_arn_solver_mpi.py 
+#INFILE=./data/kdvin.yml
+#sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_test $RHODATA 367 10 $INFILE $PYTHONSCRIPT
 #sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_data_rho_v4 $RHODATA 367 500 $INFILE
 #sbatch run-vkdv-singularity $SEASONALA0 slim-seasonal_a0_clim_rho_v4 $RHOCLIM 367 500 $INFILE
 #sbatch run-vkdv-singularity $HARMONICA0 slim-harmo_a0_data_rho_v4 $RHODATA 367 500 $INFILE
