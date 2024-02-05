@@ -27,19 +27,20 @@ dask.config.set(scheduler='processes')
 
 def main(outpath, nt, nsamples=500):
 
-    if "PYTHON_HOME" in os.environ.keys():
-        PYTHON_HOME = os.environ["PYTHON_HOME"]
-    else:
-        PYTHON_HOME = "."
-    sys.path.append(PYTHON_HOME)
+    #if "PYTHON_HOME" in os.environ.keys():
+    #    PYTHON_HOME = os.environ["PYTHON_HOME"]
+    #else:
+    #    PYTHON_HOME = "../KDV/"
+    #sys.path.append(PYTHON_HOME)
+    PYTHON_HOME = '/data/jupyter-ubuntu/KDV/'
 
     slim_output_dir = os.path.join(PYTHON_HOME, "output", outpath)
     slimfiles = os.path.join(slim_output_dir,'*.h5')
     print(slimfiles)
 
     timestamp = strftime("%Y-%m-%d--%H-%M-%S", gmtime())
-    outfile = os.path.join(PYTHON_HOME,'output','{}_{}_magnus_kdv_runs.nc'.format(timestamp,outpath))
-
+    outfile = os.path.join(PYTHON_HOME, 'output','{}_{}_magnus_kdv_runs.nc'.format(timestamp,outpath))
+    print(outfile)
 
      
     # Data are stored in individual hdf5 files for each step (1473) and each sample (500)
@@ -86,8 +87,9 @@ def main(outpath, nt, nsamples=500):
             print('Cannot find variable %s. Returning -999.'%varname)
             a0 = np.array([-999])
         else:
-            a0 = h5[varname].value
-
+            #a0 = h5[varname].value
+            #a0 = h5[varname]
+            a0 = np.array(h5[varname])
 
         h5.close()
 
@@ -129,6 +131,7 @@ def main(outpath, nt, nsamples=500):
         #usurf_tmp = load_h5_step_slim('max_u_surface', ii+1)
         beta_tmp = load_h5_step_slim('beta_samples', ii+1)
 
+        #print(a0_tmp)
         ns = a0_tmp.shape[0]
         #if ns < 500:
         #    print('Only found %d sample for step %d'%(ns,ii))
@@ -304,11 +307,19 @@ def main(outpath, nt, nsamples=500):
 ###outpath = 'slim-stoch_a0_data_rho_v4'
 ###outpath = 'slim-stoch_a0_clim_rho_v4'
 #outpath = 'slim-harmo_a0_data_rho_v4'
+
+# First Ocean Modelling submission scenarios
 outpaths = ['slim-harmo_a0_clim_rho_v4',
     'slim-harmo_a0_data_rho_v4',
     'slim-seasonal_a0_clim_rho_v4',
     'slim-seasonal_a0_data_rho_v4',
     ]
+
+outpaths = ['slim-nonphaselocked_a0_clim_rho_v1',
+            'slim-nonphaselocked_a0_data_rho_v1',
+            'slim-seasonal_a0_clim_rho_rvkdv',
+            'slim-seasonal_a0_data_rho_rvkdv',
+           ]
 
 nt = 367
 #nt = 1127
